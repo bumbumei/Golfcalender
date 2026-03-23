@@ -207,13 +207,91 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 /* ── 공통 ── */
 .divider{height:8px;background:var(--bg);margin:8px 0;}
 .info-box{background:var(--gp);border-radius:12px;padding:14px;font-size:13px;color:var(--gd);line-height:1.9;margin:16px;}
+
+/* ── 로그인/회원가입 화면 ── */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--gd),var(--g) 60%,var(--gm));z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.auth-screen::before{content:'⛳';position:absolute;right:-20px;top:20px;font-size:160px;opacity:.05;}
+.auth-box{background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+.auth-box-title{font-size:22px;font-weight:900;color:var(--gd);text-align:center;margin-bottom:4px;}
+.auth-box-sub{font-size:13px;color:var(--tl);text-align:center;margin-bottom:24px;}
+.auth-form{display:flex;flex-direction:column;gap:12px;}
+.auth-field{display:flex;flex-direction:column;gap:5px;}
+.auth-label{font-size:12px;font-weight:700;color:var(--tm);}
+.auth-input{width:100%;padding:13px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:15px;font-family:inherit;outline:none;background:#fafff9;box-sizing:border-box;}
+.auth-input:focus{border-color:var(--g);background:#fff;}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--g),var(--gm));color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:16px;cursor:pointer;font-family:inherit;margin-top:4px;}
+.auth-btn:active{opacity:.85;}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--tl);}
+.auth-switch a{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;}
+.auth-error{background:#fee2e2;color:#dc2626;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
+.auth-migrate{background:var(--gp);color:var(--gd);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;text-align:center;margin-bottom:8px;}
+
+/* ── 헤더 사용자 표시 ── */
+.hd-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);}
+.hd-user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;}
+.hd-user-name{font-size:13px;font-weight:700;opacity:.9;}
+.hd-logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
 </style>
 </head>
 <body>
 
+<!-- 로그인/회원가입 화면 -->
+<div id="authScreen" class="auth-screen" style="display:none;">
+  <div class="auth-box">
+    <div class="auth-box-title">⛳ 골프 캘린더</div>
+
+    <!-- 로그인 폼 -->
+    <div id="loginForm">
+      <div class="auth-box-sub">로그인하여 내 골프 일정을 관리하세요</div>
+      <div id="migrateNotice" class="auth-migrate" style="display:none;">📦 기존 일정 데이터가 발견되었습니다.<br>회원가입 후 자동으로 가져옵니다.</div>
+      <div class="auth-error" id="loginError"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">아이디</label>
+          <input class="auth-input" id="loginId" type="text" placeholder="아이디 입력" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호</label>
+          <input class="auth-input" id="loginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="auth-btn" onclick="doLogin()">로그인</button>
+      </div>
+      <div class="auth-switch">계정이 없으신가요? <a onclick="showRegister()">회원가입</a></div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="registerForm" style="display:none;">
+      <div class="auth-box-sub">새 계정을 만들어주세요</div>
+      <div class="auth-error" id="registerError"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">이름</label>
+          <input class="auth-input" id="regName" type="text" placeholder="이름 입력" onkeydown="if(event.key==='Enter')document.getElementById('regId').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">아이디</label>
+          <input class="auth-input" id="regId" type="text" placeholder="영문/숫자 4자 이상" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('regPw').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호</label>
+          <input class="auth-input" id="regPw" type="password" placeholder="4자 이상" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPw2').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호 확인</label>
+          <input class="auth-input" id="regPw2" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+        </div>
+        <button class="auth-btn" onclick="doRegister()">회원가입</button>
+      </div>
+      <div class="auth-switch">이미 계정이 있으신가요? <a onclick="showLogin()">로그인</a></div>
+    </div>
+  </div>
+</div>
+
 <!-- 헤더 -->
 <div class="hd">
   <div class="hd-sub">Golf Schedule</div>
+  <div class="hd-user" id="hdUser"></div>
   <div class="hd-title">⛳ 골프 캘린더</div>
   <div class="hd-btns">
     <button class="hbtn hbtn-g" onclick="openAdd()">＋ 일정 추가</button>
@@ -447,13 +525,162 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 
 <script>
 // ═══════════════════════════════════════
+// 사용자 인증 (로그인/회원가입)
+// ═══════════════════════════════════════
+let userList = JSON.parse(localStorage.getItem('golf_users') || '[]');
+let currentUser = localStorage.getItem('golf_current_user') || null;
+
+function getUserKey(key){ return `golf_${currentUser}_${key}`; }
+function saveUserList(){ localStorage.setItem('golf_users', JSON.stringify(userList)); }
+
+// 간단한 해시 함수 (SHA-256 대용, 클라이언트 전용)
+async function hashPassword(pw){
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pw + '_golf_salt_2024');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// 기존 데이터 마이그레이션
+function migrateOldData(){
+  const oldSchedules = localStorage.getItem('golf_schedules');
+  const oldCourses = localStorage.getItem('golf_courses');
+  const oldAlarms = localStorage.getItem('golf_confirmed_alarms');
+  if(oldSchedules || oldCourses) return { schedules: oldSchedules, courses: oldCourses, alarms: oldAlarms };
+  return null;
+}
+function clearOldData(){
+  localStorage.removeItem('golf_schedules');
+  localStorage.removeItem('golf_courses');
+  localStorage.removeItem('golf_confirmed_alarms');
+}
+
+// ── 화면 전환 ──
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display = 'flex';
+  const hasOld = localStorage.getItem('golf_schedules') || localStorage.getItem('golf_courses');
+  document.getElementById('migrateNotice').style.display = hasOld ? 'block' : 'none';
+}
+function hideAuthScreen(){ document.getElementById('authScreen').style.display = 'none'; }
+
+function showLogin(){
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+}
+function showRegister(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('registerError').style.display = 'none';
+  document.getElementById('regName').value = '';
+  document.getElementById('regId').value = '';
+  document.getElementById('regPw').value = '';
+  document.getElementById('regPw2').value = '';
+}
+
+function showAuthError(formId, msg){
+  const el = document.getElementById(formId);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── 회원가입 ──
+async function doRegister(){
+  const name = document.getElementById('regName').value.trim();
+  const uid  = document.getElementById('regId').value.trim();
+  const pw   = document.getElementById('regPw').value;
+  const pw2  = document.getElementById('regPw2').value;
+
+  if(!name) return showAuthError('registerError','이름을 입력해주세요.');
+  if(!uid || uid.length < 4) return showAuthError('registerError','아이디는 4자 이상 입력해주세요.');
+  if(!/^[a-zA-Z0-9_]+$/.test(uid)) return showAuthError('registerError','아이디는 영문, 숫자, _만 사용 가능합니다.');
+  if(!pw || pw.length < 4) return showAuthError('registerError','비밀번호는 4자 이상 입력해주세요.');
+  if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
+  if(userList.some(u => u.uid === uid)) return showAuthError('registerError','이미 사용 중인 아이디입니다.');
+
+  const id = 'u' + Date.now();
+  const created = new Date().toISOString().slice(0,10);
+  const pwHash = await hashPassword(pw);
+  userList.push({ id, uid, name, pwHash, created });
+  saveUserList();
+
+  // 첫 번째 사용자에게 기존 데이터 마이그레이션
+  if(userList.length === 1){
+    const old = migrateOldData();
+    if(old){
+      if(old.schedules) localStorage.setItem(`golf_${id}_schedules`, old.schedules);
+      if(old.courses) localStorage.setItem(`golf_${id}_courses`, old.courses);
+      if(old.alarms) localStorage.setItem(`golf_${id}_alarms`, old.alarms);
+      clearOldData();
+    }
+  }
+
+  loginAs(id);
+}
+
+// ── 로그인 ──
+async function doLogin(){
+  const uid = document.getElementById('loginId').value.trim();
+  const pw  = document.getElementById('loginPw').value;
+
+  if(!uid || !pw) return showAuthError('loginError','아이디와 비밀번호를 입력해주세요.');
+
+  const pwHash = await hashPassword(pw);
+  const user = userList.find(u => u.uid === uid && u.pwHash === pwHash);
+  if(!user) return showAuthError('loginError','아이디 또는 비밀번호가 올바르지 않습니다.');
+
+  loginAs(user.id);
+}
+
+function loginAs(id){
+  currentUser = id;
+  localStorage.setItem('golf_current_user', id);
+  loadUserData();
+  hideAuthScreen();
+  renderHeaderUser();
+  renderAll();
+}
+
+// ── 로그아웃 ──
+function doLogout(){
+  currentUser = null;
+  localStorage.removeItem('golf_current_user');
+  showAuthScreen();
+  showLogin();
+}
+
+// ── 헤더 표시 ──
+function renderHeaderUser(){
+  const u = userList.find(x => x.id === currentUser);
+  const el = document.getElementById('hdUser');
+  if(u){
+    el.innerHTML = `<div class="hd-user-left" onclick="doLogout()">
+      <div class="hd-user-avatar">${u.name.charAt(0)}</div>
+      <span class="hd-user-name">${u.name}</span>
+    </div>
+    <button class="hd-logout-btn" onclick="doLogout()">로그아웃</button>`;
+    el.style.display = 'flex';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════
 // 데이터 & 상태
 // ═══════════════════════════════════════
 const DEFAULT_COURSES = ['아시아나','렉스필드','태광','설해원'];
 
-let courses   = JSON.parse(localStorage.getItem('golf_courses')   || 'null') || [...DEFAULT_COURSES];
-let schedules = JSON.parse(localStorage.getItem('golf_schedules') || '[]');
-let confirmedAlarms = JSON.parse(localStorage.getItem('golf_confirmed_alarms') || '[]');
+let courses   = [];
+let schedules = [];
+let confirmedAlarms = [];
+
+function loadUserData(){
+  courses = JSON.parse(localStorage.getItem(getUserKey('courses')) || 'null') || [...DEFAULT_COURSES];
+  schedules = JSON.parse(localStorage.getItem(getUserKey('schedules')) || '[]');
+  confirmedAlarms = JSON.parse(localStorage.getItem(getUserKey('alarms')) || '[]');
+}
 
 // 폼 상태
 let editId        = null;
@@ -492,9 +719,10 @@ function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('
 function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
 function nextId(){ return schedules.length ? Math.max(...schedules.map(s=>s.id))+1 : 1; }
 function saveData(){
-  localStorage.setItem('golf_courses',   JSON.stringify(courses));
-  localStorage.setItem('golf_schedules', JSON.stringify(schedules));
-  localStorage.setItem('golf_confirmed_alarms', JSON.stringify(confirmedAlarms));
+  if(!currentUser) return;
+  localStorage.setItem(getUserKey('courses'),   JSON.stringify(courses));
+  localStorage.setItem(getUserKey('schedules'), JSON.stringify(schedules));
+  localStorage.setItem(getUserKey('alarms'), JSON.stringify(confirmedAlarms));
 }
 function closeModal(id){ document.getElementById(id).style.display='none'; }
 
@@ -1094,7 +1322,26 @@ function renderAll(){
 // ═══════════════════════════════════════
 document.getElementById('f-date').value   = toDateStr(today);
 document.getElementById('di-date').value  = toDateStr(today);
-renderAll();
+
+// 사용자 확인 후 앱 시작
+(function init(){
+  if(currentUser && userList.some(u => u.id === currentUser)){
+    // 로그인 세션 유지
+    loadUserData();
+    renderHeaderUser();
+    renderAll();
+  } else {
+    // 로그인 필요
+    currentUser = null;
+    localStorage.removeItem('golf_current_user');
+    showAuthScreen();
+    // 기존 데이터 있으면 회원가입 유도
+    const hasOld = localStorage.getItem('golf_schedules') || localStorage.getItem('golf_courses');
+    if(hasOld && !userList.length) showRegister();
+    else showLogin();
+  }
+})();
+
 if('Notification' in window && Notification.permission==='granted') pushNotifs();
 </script>
 </body>
