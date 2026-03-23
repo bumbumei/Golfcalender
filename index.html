@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a4731">
 <title>⛳ 골프 캘린더</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --gd:#1a4731;--g:#2d6a4f;--gm:#40916c;--gp:#d8f3dc;
@@ -25,7 +29,7 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .hd::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),#f59e0b,var(--gold));}
 .hd-sub{font-size:10px;letter-spacing:4px;opacity:.65;font-weight:600;}
 .hd-title{font-size:24px;font-weight:900;margin:4px 0 16px;}
-.hd-btns{display:flex;gap:8px;}
+.hd-btns{display:flex;gap:8px;position:relative;z-index:2;}
 .hbtn{flex:1;border:none;border-radius:12px;padding:11px 8px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;}
 .hbtn-g{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;}
 .hbtn-w{background:#fff;color:var(--gd);}
@@ -88,9 +92,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .sche-card.confirmed{border-left-color:var(--cf);}
 .sche-card.open{border-left-color:var(--op);}
 .sche-card.planned{border-left-color:var(--pl);}
-.sche-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.sche-date{font-size:13px;font-weight:800;color:var(--gd);}
-.sche-badge{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;}
+.sche-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;}
+.sche-date{font-size:13px;font-weight:800;color:var(--gd);flex:1;min-width:0;}
+.sche-time{font-size:12px;font-weight:600;color:var(--tm);margin-top:2px;}
+.sche-badge{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;}
 .bc{background:var(--cfb);color:var(--cf);}
 .bo{background:var(--opb);color:var(--op);}
 .bp{background:var(--plb);color:var(--pl);}
@@ -207,13 +212,142 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 /* ── 공통 ── */
 .divider{height:8px;background:var(--bg);margin:8px 0;}
 .info-box{background:var(--gp);border-radius:12px;padding:14px;font-size:13px;color:var(--gd);line-height:1.9;margin:16px;}
+
+/* ── 로그인/회원가입 화면 ── */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--gd),var(--g) 60%,var(--gm));z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.auth-screen::before{content:'⛳';position:absolute;right:-20px;top:20px;font-size:160px;opacity:.05;}
+.auth-box{background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+.auth-box-title{font-size:22px;font-weight:900;color:var(--gd);text-align:center;margin-bottom:4px;}
+.auth-box-sub{font-size:13px;color:var(--tl);text-align:center;margin-bottom:24px;}
+.auth-form{display:flex;flex-direction:column;gap:12px;}
+.auth-field{display:flex;flex-direction:column;gap:5px;}
+.auth-label{font-size:12px;font-weight:700;color:var(--tm);}
+.auth-input{width:100%;padding:13px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:15px;font-family:inherit;outline:none;background:#fafff9;box-sizing:border-box;}
+.auth-input:focus{border-color:var(--g);background:#fff;}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--g),var(--gm));color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:16px;cursor:pointer;font-family:inherit;margin-top:4px;}
+.auth-btn:active{opacity:.85;}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--tl);}
+.auth-switch a{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;}
+.auth-error{background:#fee2e2;color:#dc2626;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
+.auth-success{background:#d1fae5;color:#1a6b3c;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
+.auth-migrate{background:var(--gp);color:var(--gd);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;text-align:center;margin-bottom:8px;}
+.auth-link{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13px;}
+.auth-links{display:flex;justify-content:center;gap:16px;margin-top:12px;}
+
+/* ── 헤더 사용자 표시 ── */
+.hd-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;position:relative;z-index:2;}
+.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);min-width:0;overflow:hidden;}
+.hd-user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;}
+.hd-user-name{font-size:13px;font-weight:700;opacity:.9;white-space:nowrap;}
+.hd-user-email{font-size:10px;opacity:.6;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hd-btns-right{display:flex;gap:6px;flex-shrink:0;}
+.hd-logout-btn,.hd-admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;z-index:3;touch-action:manipulation;}
+.hd-admin-btn{background:rgba(212,160,23,.3);border-color:rgba(212,160,23,.5);}
+
+/* ── 관리자 패널 ── */
+.admin-panel{display:none;}
+.admin-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px;}
+.admin-title{font-size:18px;font-weight:900;color:var(--gd);}
+.admin-back{background:var(--gp);border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--gd);cursor:pointer;font-family:inherit;}
+.admin-stats{display:flex;gap:10px;padding:0 16px 12px;overflow-x:auto;}
+.admin-stat{min-width:100px;background:#fff;border-radius:14px;padding:14px;box-shadow:var(--sh);text-align:center;flex-shrink:0;}
+.admin-stat-val{font-size:22px;font-weight:900;color:var(--gd);}
+.admin-stat-label{font-size:11px;color:var(--tl);font-weight:600;margin-top:4px;}
+.admin-user-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.admin-user-card{background:#fff;border-radius:14px;padding:16px;box-shadow:var(--sh);}
+.admin-user-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.admin-user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gm));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:900;flex-shrink:0;}
+.admin-user-info{flex:1;}
+.admin-user-name{font-size:15px;font-weight:800;color:var(--tx);}
+.admin-user-detail{font-size:11px;color:var(--tl);margin-top:2px;}
+.admin-badge{background:linear-gradient(135deg,#d4a017,#f59e0b);color:#fff;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px;}
+.admin-user-btns{display:flex;gap:6px;}
+.admin-ubtn{border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.admin-ubtn-reset{background:#fef3c7;color:#854d0e;}
+.admin-ubtn-del{background:#fee2e2;color:#dc2626;}
+.admin-ubtn-role{background:var(--gp);color:var(--gd);}
 </style>
 </head>
 <body>
 
+<!-- 로그인/회원가입 화면 -->
+<div id="authScreen" class="auth-screen" style="display:none;">
+  <div class="auth-box">
+    <div class="auth-box-title">⛳ 골프 캘린더</div>
+
+    <!-- 로그인 폼 -->
+    <div id="loginForm">
+      <div class="auth-box-sub">로그인하여 내 골프 일정을 관리하세요</div>
+      <div id="migrateNotice" class="auth-migrate" style="display:none;"></div>
+      <div class="auth-error" id="loginError"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">이메일</label>
+          <input class="auth-input" id="loginEmail" type="email" placeholder="example@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호</label>
+          <input class="auth-input" id="loginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="auth-btn" onclick="doLogin()">로그인</button>
+      </div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showRegister()">회원가입</a>
+        <a class="auth-link" onclick="showForgotPw()">비밀번호 찾기</a>
+      </div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="registerForm" style="display:none;">
+      <div class="auth-box-sub">새 계정을 만들어주세요</div>
+      <div class="auth-error" id="registerError"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">이름</label>
+          <input class="auth-input" id="regName" type="text" placeholder="이름 입력" onkeydown="if(event.key==='Enter')document.getElementById('regEmail').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">이메일 (로그인 ID)</label>
+          <input class="auth-input" id="regEmail" type="email" placeholder="example@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('regPw').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호</label>
+          <input class="auth-input" id="regPw" type="password" placeholder="4자 이상" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPw2').focus()">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">비밀번호 확인</label>
+          <input class="auth-input" id="regPw2" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+        </div>
+        <button class="auth-btn" onclick="doRegister()">회원가입</button>
+      </div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+      </div>
+    </div>
+
+    <!-- 비밀번호 찾기 폼 -->
+    <div id="forgotPwForm" style="display:none;">
+      <div class="auth-box-sub">가입 시 사용한 이메일을 입력하세요</div>
+      <div class="auth-error" id="forgotError"></div>
+      <div class="auth-success" id="forgotSuccess"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">이메일</label>
+          <input class="auth-input" id="forgotEmail" type="email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')doForgotPw()">
+        </div>
+        <button class="auth-btn" onclick="doForgotPw()">비밀번호 재설정 이메일 발송</button>
+      </div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 헤더 -->
 <div class="hd">
   <div class="hd-sub">Golf Schedule</div>
+  <div class="hd-user" id="hdUser"></div>
   <div class="hd-title">⛳ 골프 캘린더</div>
   <div class="hd-btns">
     <button class="hbtn hbtn-g" onclick="openAdd()">＋ 일정 추가</button>
@@ -342,6 +476,18 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
   </div>
 </div>
 
+<!-- 관리자 패널 -->
+<div id="adminPanel" class="admin-panel">
+  <div class="admin-header">
+    <div class="admin-title">👑 사용자 관리</div>
+    <button class="admin-back" onclick="goCalendar()">← 캘린더로</button>
+  </div>
+  <div class="admin-stats" id="adminStats"></div>
+  <div class="divider"></div>
+  <div class="sec-title">📋 전체 사용자 목록</div>
+  <div class="admin-user-list" id="adminUserList"></div>
+</div>
+
 <!-- 하단 네비 -->
 <div class="bottom-nav">
   <button class="nav-btn active" id="nb-cal" onclick="goCalendar();switchTab('cal')">
@@ -418,8 +564,9 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
         <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
       </div>
 
-      <div class="fsec">📷 사진 & 메모</div>
-      <div>
+      <div class="fsec">📝 메모</div>
+      <!-- 사진 업로드 숨김 -->
+      <div style="display:none;">
         <div class="flabel">사진 추가</div>
         <div class="photo-upload-area" id="photoArea">
           <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
@@ -447,13 +594,351 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 
 <script>
 // ═══════════════════════════════════════
-// 데이터 & 상태
+// Firebase 초기화
+// ═══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAbb92J3XlscMDVINEzjlaX5KXpzStunFE",
+  authDomain: "golf-calendar-14e5d.firebaseapp.com",
+  projectId: "golf-calendar-14e5d",
+  storageBucket: "golf-calendar-14e5d.firebasestorage.app",
+  messagingSenderId: "737974330226",
+  appId: "1:737974330226:web:cfa9d623d90b4b8291f3eb"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ═══════════════════════════════════════
+// 사용자 인증 (Firebase Auth)
+// ═══════════════════════════════════════
+let currentUser = null;     // Firebase user object
+let currentUserData = null; // Firestore user profile
+let allUsers = [];          // 관리자용 전체 사용자 목록
+
+function isAdmin(){ return currentUserData && currentUserData.role === 'admin'; }
+
+// ── 화면 전환 ──
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display = 'flex';
+}
+function hideAuthScreen(){ document.getElementById('authScreen').style.display = 'none'; }
+
+function showLogin(){
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('forgotPwForm').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPw').value = '';
+}
+function showRegister(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('forgotPwForm').style.display = 'none';
+  document.getElementById('registerError').style.display = 'none';
+  document.getElementById('regName').value = '';
+  document.getElementById('regEmail').value = '';
+  document.getElementById('regPw').value = '';
+  document.getElementById('regPw2').value = '';
+}
+function showForgotPw(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('forgotPwForm').style.display = 'block';
+  document.getElementById('forgotError').style.display = 'none';
+  document.getElementById('forgotSuccess').style.display = 'none';
+  document.getElementById('forgotEmail').value = '';
+}
+
+function showAuthError(formId, msg){
+  const el = document.getElementById(formId);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function showAuthSuccess(formId, msg){
+  const el = document.getElementById(formId);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// Firebase 에러 메시지 한글화
+function firebaseErrorMsg(code){
+  const map = {
+    'auth/email-already-in-use': '이미 가입된 이메일입니다.',
+    'auth/invalid-email': '올바른 이메일 형식이 아닙니다.',
+    'auth/weak-password': '비밀번호는 6자 이상 입력해주세요.',
+    'auth/user-not-found': '등록되지 않은 이메일입니다.',
+    'auth/wrong-password': '비밀번호가 올바르지 않습니다.',
+    'auth/invalid-credential': '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'auth/too-many-requests': '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요.',
+    'auth/network-request-failed': '네트워크 오류입니다. 인터넷 연결을 확인해주세요.',
+  };
+  return map[code] || '오류가 발생했습니다. 다시 시도해주세요.';
+}
+
+// ── 회원가입 (Firebase Auth + Firestore) ──
+async function doRegister(){
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pw    = document.getElementById('regPw').value;
+  const pw2   = document.getElementById('regPw2').value;
+
+  if(!name) return showAuthError('registerError','이름을 입력해주세요.');
+  if(!email) return showAuthError('registerError','이메일을 입력해주세요.');
+  if(!pw || pw.length < 6) return showAuthError('registerError','비밀번호는 6자 이상 입력해주세요.');
+  if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
+
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pw);
+    await cred.user.updateProfile({ displayName: name });
+
+    // Firestore에 사용자 프로필 저장
+    // 첫 번째 사용자는 관리자
+    const usersSnap = await db.collection('users').get();
+    const role = usersSnap.empty ? 'admin' : 'user';
+
+    await db.collection('users').doc(cred.user.uid).set({
+      email, name, role,
+      created: new Date().toISOString().slice(0,10)
+    });
+    // onAuthStateChanged에서 자동 로그인 처리됨
+  } catch(e){
+    showAuthError('registerError', firebaseErrorMsg(e.code));
+  }
+}
+
+// ── 로그인 (Firebase Auth) ──
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pw    = document.getElementById('loginPw').value;
+
+  if(!email || !pw) return showAuthError('loginError','이메일과 비밀번호를 입력해주세요.');
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    // onAuthStateChanged에서 자동 처리
+  } catch(e){
+    showAuthError('loginError', firebaseErrorMsg(e.code));
+  }
+}
+
+// ── 비밀번호 찾기 (Firebase 이메일 발송) ──
+async function doForgotPw(){
+  const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+  document.getElementById('forgotError').style.display = 'none';
+  document.getElementById('forgotSuccess').style.display = 'none';
+
+  if(!email) return showAuthError('forgotError','이메일을 입력해주세요.');
+
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showAuthSuccess('forgotSuccess',
+      `✅ 비밀번호 재설정 이메일을 발송했습니다.\n이메일 수신함을 확인해주세요.`
+    );
+    document.getElementById('forgotSuccess').style.whiteSpace = 'pre-line';
+  } catch(e){
+    showAuthError('forgotError', firebaseErrorMsg(e.code));
+  }
+}
+
+// ── 로그아웃 ──
+function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  auth.signOut();
+  // onAuthStateChanged에서 자동 처리
+}
+
+// ── Firebase Auth 상태 감지 ──
+auth.onAuthStateChanged(async (user) => {
+  if(user){
+    currentUser = user;
+    // Firestore에서 사용자 프로필 가져오기
+    const doc = await db.collection('users').doc(user.uid).get();
+    if(doc.exists){
+      currentUserData = { id: user.uid, ...doc.data() };
+      // 특정 이메일 관리자 자동 승격
+      if(user.email === 'bumbumei@gmail.com' && currentUserData.role !== 'admin'){
+        await db.collection('users').doc(user.uid).update({ role: 'admin' });
+        currentUserData.role = 'admin';
+      }
+      // 마지막 로그인 시간 저장
+      const now = new Date().toISOString().replace('T',' ').slice(0,16);
+      await db.collection('users').doc(user.uid).update({ lastLogin: now });
+      currentUserData.lastLogin = now;
+    } else {
+      // Firestore에 프로필이 없으면 생성
+      const usersSnap = await db.collection('users').get();
+      const role = usersSnap.size <= 1 ? 'admin' : 'user';
+      const profile = {
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+        role,
+        created: new Date().toISOString().slice(0,10)
+      };
+      await db.collection('users').doc(user.uid).set(profile);
+      currentUserData = { id: user.uid, ...profile };
+    }
+    await loadUserData();
+    hideAuthScreen();
+    document.getElementById('mainCal').style.display = 'block';
+    document.getElementById('mainManage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none';
+    renderHeaderUser();
+    renderAll();
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('mainCal').style.display = 'none';
+    document.getElementById('mainManage').style.display = 'none';
+    showAuthScreen();
+    showLogin();
+  }
+});
+
+// ── 헤더 표시 ──
+function renderHeaderUser(){
+  const u = currentUserData;
+  const el = document.getElementById('hdUser');
+  if(u){
+    const adminBtn = u.role === 'admin'
+      ? `<button class="hd-admin-btn" onclick="goAdmin()">👑 관리</button>` : '';
+    el.innerHTML = `<div class="hd-user-left">
+      <div class="hd-user-avatar">${u.name.charAt(0)}</div>
+      <span class="hd-user-name">${u.name}</span>
+      <span class="hd-user-email">${u.email}</span>
+    </div>
+    <div class="hd-btns-right">
+      ${adminBtn}
+      <button class="hd-logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>`;
+    el.style.display = 'flex';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════
+// 관리자 패널 (Firestore 기반)
+// ═══════════════════════════════════════
+async function goAdmin(){
+  if(!isAdmin()){ alert('관리자 권한이 없습니다.'); return; }
+  document.getElementById('mainCal').style.display = 'none';
+  document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  ['nb-cal','nb-list','nb-stats','nb-manage'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  await renderAdminPanel();
+}
+
+async function renderAdminPanel(){
+  // Firestore에서 전체 사용자 목록 가져오기
+  const snap = await db.collection('users').get();
+  allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const totalUsers = allUsers.length;
+  const adminCount = allUsers.filter(u => u.role === 'admin').length;
+
+  // 각 사용자의 일정 수 가져오기
+  let totalSchedules = 0;
+  const userScheduleCounts = {};
+  for(const u of allUsers){
+    const scheSnap = await db.collection('users').doc(u.id).collection('schedules').get();
+    userScheduleCounts[u.id] = scheSnap.size;
+    totalSchedules += scheSnap.size;
+  }
+
+  document.getElementById('adminStats').innerHTML = [
+    { val: totalUsers, label: '전체 사용자' },
+    { val: adminCount, label: '관리자' },
+    { val: totalUsers - adminCount, label: '일반 사용자' },
+    { val: totalSchedules, label: '전체 일정' },
+  ].map(s => `<div class="admin-stat">
+    <div class="admin-stat-val">${s.val}</div>
+    <div class="admin-stat-label">${s.label}</div>
+  </div>`).join('');
+
+  document.getElementById('adminUserList').innerHTML = allUsers.map((u) => {
+    const scheCount = userScheduleCounts[u.id] || 0;
+    const isSelf = u.id === currentUser.uid;
+    const badge = u.role === 'admin' ? '<span class="admin-badge">관리자</span>' : '';
+    const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole('${u.id}')">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
+    const resetBtn = `<button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw('${u.id}','${u.email}','${u.name}')">비밀번호 초기화</button>`;
+    const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser('${u.id}','${u.name}','${u.email}')">삭제</button>` : '';
+    return `<div class="admin-user-card">
+      <div class="admin-user-top">
+        <div class="admin-user-avatar">${u.name.charAt(0)}</div>
+        <div class="admin-user-info">
+          <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
+          <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 최근: ${u.lastLogin || '-'} · 일정 ${scheCount}건</div>
+        </div>
+      </div>
+      <div class="admin-user-btns">
+        ${resetBtn}
+        ${roleBtn}
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function adminResetPw(uid, email, name){
+  if(!confirm(`"${name}" (${email})에게 비밀번호 재설정 이메일을 발송하시겠습니까?`)) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    alert(`✅ ${email}로 비밀번호 재설정 이메일을 발송했습니다.`);
+  } catch(e){
+    alert('이메일 발송 중 오류가 발생했습니다: ' + firebaseErrorMsg(e.code));
+  }
+}
+
+async function toggleRole(uid){
+  const u = allUsers.find(x => x.id === uid);
+  if(!u) return;
+  const newRole = u.role === 'admin' ? 'user' : 'admin';
+  if(!confirm(`"${u.name}"을(를) ${newRole === 'admin' ? '관리자' : '일반 사용자'}로 변경하시겠습니까?`)) return;
+  await db.collection('users').doc(uid).update({ role: newRole });
+  await renderAdminPanel();
+}
+
+async function adminDeleteUser(uid, name, email){
+  if(!confirm(`⚠️ "${name}" (${email}) 사용자를 삭제하시겠습니까?\n모든 일정 데이터가 삭제됩니다.`)) return;
+  // Firestore 하위 컬렉션 삭제
+  const subcols = ['schedules','courses','alarms'];
+  for(const col of subcols){
+    const snap = await db.collection('users').doc(uid).collection(col).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  await db.collection('users').doc(uid).delete();
+  await renderAdminPanel();
+}
+
+// ═══════════════════════════════════════
+// 데이터 & 상태 (Firestore)
 // ═══════════════════════════════════════
 const DEFAULT_COURSES = ['아시아나','렉스필드','태광','설해원'];
 
-let courses   = JSON.parse(localStorage.getItem('golf_courses')   || 'null') || [...DEFAULT_COURSES];
-let schedules = JSON.parse(localStorage.getItem('golf_schedules') || '[]');
-let confirmedAlarms = JSON.parse(localStorage.getItem('golf_confirmed_alarms') || '[]');
+let courses   = [];
+let schedules = [];
+let confirmedAlarms = [];
+
+async function loadUserData(){
+  if(!currentUser) return;
+  const uid = currentUser.uid;
+
+  // courses 로드
+  const coursesDoc = await db.collection('users').doc(uid).collection('settings').doc('courses').get();
+  courses = coursesDoc.exists ? coursesDoc.data().list : [...DEFAULT_COURSES];
+
+  // schedules 로드
+  const scheSnap = await db.collection('users').doc(uid).collection('schedules').get();
+  schedules = scheSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // alarms 로드
+  const alarmsDoc = await db.collection('users').doc(uid).collection('settings').doc('alarms').get();
+  confirmedAlarms = alarmsDoc.exists ? alarmsDoc.data().list : [];
+}
 
 // 폼 상태
 let editId        = null;
@@ -490,11 +975,11 @@ function toDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padSt
 function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
 function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('ko-KR').format(n)+'원'; }
 function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
-function nextId(){ return schedules.length ? Math.max(...schedules.map(s=>s.id))+1 : 1; }
-function saveData(){
-  localStorage.setItem('golf_courses',   JSON.stringify(courses));
-  localStorage.setItem('golf_schedules', JSON.stringify(schedules));
-  localStorage.setItem('golf_confirmed_alarms', JSON.stringify(confirmedAlarms));
+async function saveData(){
+  if(!currentUser) return;
+  const uid = currentUser.uid;
+  await db.collection('users').doc(uid).collection('settings').doc('courses').set({ list: courses });
+  await db.collection('users').doc(uid).collection('settings').doc('alarms').set({ list: confirmedAlarms });
 }
 function closeModal(id){ document.getElementById(id).style.display='none'; }
 
@@ -504,11 +989,13 @@ function closeModal(id){ document.getElementById(id).style.display='none'; }
 function goCalendar(){
   document.getElementById('mainCal').style.display = 'block';
   document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('nb-manage').classList.remove('active');
 }
 function goManage(){
   document.getElementById('mainCal').style.display = 'none';
   document.getElementById('mainManage').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
   ['nb-cal','nb-list','nb-stats'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   document.getElementById('nb-manage').classList.add('active');
   renderManage();
@@ -574,7 +1061,7 @@ function scheCard(s){
   const bc = s.type==='confirmed'?'bc':s.type==='open'?'bo':'bp';
   const courseStr = (s.courses||[]).join(', ')||'미정';
   const compStr   = (s.companions||[]).length?(s.companions||[]).join(', '):'미정';
-  const timeStr   = s.time ? ` · ${s.time} 티오프` : '';
+  const timeHtml  = s.time ? `<div class="sche-time">⏰ ${s.time} 티오프</div>` : '';
   const tc = totalCost(s);
 
   let costDetail='';
@@ -592,7 +1079,7 @@ function scheCard(s){
 
   return `<div class="sche-card ${s.type}">
     <div class="sche-top">
-      <div class="sche-date">${fmtDate(s.date)}${timeStr}</div>
+      <div class="sche-date">${fmtDate(s.date)}${timeHtml}</div>
       <span class="sche-badge ${bc}">${tl}</span>
     </div>
     <div class="sche-course">${courseStr}</div>
@@ -603,8 +1090,8 @@ function scheCard(s){
     </div>
     ${costDetail}${photoHtml}${memoHtml}
     <div class="sche-btns">
-      <button class="btn-edit" onclick="openEdit(${s.id})">✏️ 수정</button>
-      <button class="btn-del"  onclick="delSchedule(${s.id})">🗑️ 삭제</button>
+      <button class="btn-edit" onclick="openEdit('${s.id}')">✏️ 수정</button>
+      <button class="btn-del"  onclick="delSchedule('${s.id}')">🗑️ 삭제</button>
     </div>
   </div>`;
 }
@@ -779,13 +1266,13 @@ function renderAlarm(){
     const compStr=(s.companions||[]).join(', ')||'미정';
     return`<div class="alarm-item">
       <div class="alarm-dday">${icon}<span>${lbl}</span></div>
-      <div class="alarm-info" onclick="openEdit(${s.id})">
+      <div class="alarm-info" onclick="openEdit('${s.id}')">
         <div class="alarm-course-txt">${courseStr}</div>
         <div class="alarm-date-txt">${fmtDate(s.date)}${s.time?' · '+s.time:''}　👥 ${compStr}</div>
       </div>
       <div class="alarm-btns">
-        <button class="btn-alarm-ok"     onclick="okAlarm(${s.id})">✅ 확인</button>
-        <button class="btn-alarm-cancel" onclick="cancelReserve(${s.id})">예약취소</button>
+        <button class="btn-alarm-ok"     onclick="okAlarm('${s.id}')">✅ 확인</button>
+        <button class="btn-alarm-cancel" onclick="cancelReserve('${s.id}')">예약취소</button>
       </div>
     </div>`;
   }).join('');
@@ -807,15 +1294,16 @@ function toggleAlarm(){
   if(b) b.style.maxHeight=alarmFolded?'0':'2000px';
   renderAlarm();
 }
-function okAlarm(id){
+async function okAlarm(id){
   if(!confirmedAlarms.includes(id)) confirmedAlarms.push(id);
-  saveData(); renderAlarm();
+  await saveData(); renderAlarm();
 }
-function cancelReserve(id){
+async function cancelReserve(id){
   const s=schedules.find(x=>x.id===id); if(!s) return;
   if(confirm(`⚠️ 예약 취소\n\n골프장: ${(s.courses||[]).join(', ')||'미정'}\n날짜: ${fmtDate(s.date)}\n\n이 일정을 취소(삭제)하시겠습니까?`)){
+    await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
     schedules=schedules.filter(x=>x.id!==id);
-    saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
+    await saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
   }
 }
 function reqNotif(){
@@ -840,15 +1328,15 @@ function renderManage(){
       <button class="btn-del-course" onclick="delCourse(${i})">삭제</button>
     </div>`).join('');
 }
-function addCourse(){
+async function addCourse(){
   const name=document.getElementById('newCourse').value.trim();
   if(!name) return;
   if(courses.includes(name)){ alert('이미 있는 골프장입니다.'); return; }
-  courses.push(name); saveData(); document.getElementById('newCourse').value=''; renderManage();
+  courses.push(name); await saveData(); document.getElementById('newCourse').value=''; renderManage();
 }
-function delCourse(i){
+async function delCourse(i){
   if(!confirm(`"${courses[i]}" 골프장을 삭제하시겠습니까?`)) return;
-  courses.splice(i,1); saveData(); renderManage();
+  courses.splice(i,1); await saveData(); renderManage();
 }
 
 // ═══════════════════════════════════════
@@ -875,19 +1363,21 @@ function renderDiComps(){
   wrap.innerHTML=tags+inp;
 }
 function removeDiComp(i){ diComps.splice(i,1); renderDiComps(); }
-function saveDirect(){
+async function saveDirect(){
   const date=document.getElementById('di-date').value;
   const name=document.getElementById('di-course').value.trim();
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!name){ alert('골프장명을 입력해주세요.'); return; }
   if(!courses.includes(name)){ courses.push(name); }
-  schedules.push({
-    id:nextId(), date, time:document.getElementById('di-time').value,
+  const obj={
+    date, time:document.getElementById('di-time').value,
     type:diType, courses:[name], companions:[...diComps],
     green:0,cart:0,caddy:0,other:0,
     memo:document.getElementById('di-memo').value.trim(), photos:[],
-  });
-  saveData();
+  };
+  const docRef = await db.collection('users').doc(currentUser.uid).collection('schedules').add(obj);
+  schedules.push({...obj, id: docRef.id});
+  await saveData();
   // 초기화
   document.getElementById('di-date').value=toDateStr(today);
   document.getElementById('di-course').value='';
@@ -948,7 +1438,7 @@ function openEdit(id){
   renderPhotoArea();
   document.getElementById('formModal').style.display='flex';
 }
-function saveSchedule(){
+async function saveSchedule(){
   const date=document.getElementById('f-date').value;
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!formCourses.length){ alert('골프장을 선택하거나 직접 입력해주세요.'); return; }
@@ -962,15 +1452,22 @@ function saveSchedule(){
     memo:document.getElementById('f-memo').value.trim(),
     photos:[...formPhotos],
   };
-  if(editId) schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
-  else schedules.push({...obj,id:nextId()});
+  const uid = currentUser.uid;
+  if(editId){
+    await db.collection('users').doc(uid).collection('schedules').doc(editId).update(obj);
+    schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
+  } else {
+    const docRef = await db.collection('users').doc(uid).collection('schedules').add(obj);
+    schedules.push({...obj, id: docRef.id});
+  }
   // 직접입력 골프장 자동 등록
   formCourses.forEach(c=>{ if(!courses.includes(c)) courses.push(c); });
-  saveData(); closeModal('formModal'); renderAll();
+  await saveData(); closeModal('formModal'); renderAll();
 }
-function delSchedule(id){
+async function delSchedule(id){
   if(!confirm('일정을 삭제하시겠습니까?')) return;
-  schedules=schedules.filter(s=>s.id!==id); saveData(); renderAll();
+  await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
+  schedules=schedules.filter(s=>s.id!==id); await saveData(); renderAll();
 }
 
 // ── 일정 유형 선택 ──
@@ -1094,7 +1591,11 @@ function renderAll(){
 // ═══════════════════════════════════════
 document.getElementById('f-date').value   = toDateStr(today);
 document.getElementById('di-date').value  = toDateStr(today);
-renderAll();
+
+// Firebase onAuthStateChanged에서 초기화 자동 처리
+// 로딩 중 auth screen 표시
+showAuthScreen();
+
 if('Notification' in window && Notification.permission==='granted') pushNotifs();
 </script>
 </body>
