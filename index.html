@@ -92,9 +92,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .sche-card.confirmed{border-left-color:var(--cf);}
 .sche-card.open{border-left-color:var(--op);}
 .sche-card.planned{border-left-color:var(--pl);}
-.sche-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.sche-date{font-size:13px;font-weight:800;color:var(--gd);}
-.sche-badge{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;}
+.sche-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;}
+.sche-date{font-size:13px;font-weight:800;color:var(--gd);flex:1;min-width:0;}
+.sche-time{font-size:12px;font-weight:600;color:var(--tm);margin-top:2px;}
+.sche-badge{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;}
 .bc{background:var(--cfb);color:var(--cf);}
 .bo{background:var(--opb);color:var(--op);}
 .bp{background:var(--plb);color:var(--pl);}
@@ -563,8 +564,9 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
         <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
       </div>
 
-      <div class="fsec">📷 사진 & 메모</div>
-      <div>
+      <div class="fsec">📝 메모</div>
+      <!-- 사진 업로드 숨김 -->
+      <div style="display:none;">
         <div class="flabel">사진 추가</div>
         <div class="photo-upload-area" id="photoArea">
           <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
@@ -754,6 +756,15 @@ auth.onAuthStateChanged(async (user) => {
     const doc = await db.collection('users').doc(user.uid).get();
     if(doc.exists){
       currentUserData = { id: user.uid, ...doc.data() };
+      // 특정 이메일 관리자 자동 승격
+      if(user.email === 'bumbumei@gmail.com' && currentUserData.role !== 'admin'){
+        await db.collection('users').doc(user.uid).update({ role: 'admin' });
+        currentUserData.role = 'admin';
+      }
+      // 마지막 로그인 시간 저장
+      const now = new Date().toISOString().replace('T',' ').slice(0,16);
+      await db.collection('users').doc(user.uid).update({ lastLogin: now });
+      currentUserData.lastLogin = now;
     } else {
       // Firestore에 프로필이 없으면 생성
       const usersSnap = await db.collection('users').get();
@@ -858,7 +869,7 @@ async function renderAdminPanel(){
         <div class="admin-user-avatar">${u.name.charAt(0)}</div>
         <div class="admin-user-info">
           <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
-          <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 일정 ${scheCount}건</div>
+          <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 최근: ${u.lastLogin || '-'} · 일정 ${scheCount}건</div>
         </div>
       </div>
       <div class="admin-user-btns">
@@ -1050,7 +1061,7 @@ function scheCard(s){
   const bc = s.type==='confirmed'?'bc':s.type==='open'?'bo':'bp';
   const courseStr = (s.courses||[]).join(', ')||'미정';
   const compStr   = (s.companions||[]).length?(s.companions||[]).join(', '):'미정';
-  const timeStr   = s.time ? ` · ${s.time} 티오프` : '';
+  const timeHtml  = s.time ? `<div class="sche-time">⏰ ${s.time} 티오프</div>` : '';
   const tc = totalCost(s);
 
   let costDetail='';
@@ -1068,7 +1079,7 @@ function scheCard(s){
 
   return `<div class="sche-card ${s.type}">
     <div class="sche-top">
-      <div class="sche-date">${fmtDate(s.date)}${timeStr}</div>
+      <div class="sche-date">${fmtDate(s.date)}${timeHtml}</div>
       <span class="sche-badge ${bc}">${tl}</span>
     </div>
     <div class="sche-course">${courseStr}</div>
