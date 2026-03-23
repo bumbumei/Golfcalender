@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a4731">
+<title>⛳ 골프 캘린더</title>
+<style>
+:root{
+  --gd:#1a4731;--g:#2d6a4f;--gm:#40916c;--gp:#d8f3dc;
+  --cf:#1a6b3c;--cfb:#d1fae5;--op:#b45309;--opb:#fef3c7;
+  --pl:#7c3aed;--plb:#ede9fe;--gold:#d4a017;
+  --tx:#1a2e1a;--tm:#4a6741;--tl:#8aaa85;
+  --bg:#f0f7f0;--bd:#c8e6c9;--sh:0 4px 20px rgba(26,71,49,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding-bottom:84px;}
+
+/* ── 헤더 ── */
+.hd{background:linear-gradient(160deg,var(--gd),var(--g) 60%,var(--gm));color:#fff;padding:52px 20px 20px;position:relative;overflow:hidden;}
+.hd::before{content:'⛳';position:absolute;right:-10px;top:10px;font-size:100px;opacity:.07;}
+.hd::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),#f59e0b,var(--gold));}
+.hd-sub{font-size:10px;letter-spacing:4px;opacity:.65;font-weight:600;}
+.hd-title{font-size:24px;font-weight:900;margin:4px 0 16px;}
+.hd-btns{display:flex;gap:8px;}
+.hbtn{flex:1;border:none;border-radius:12px;padding:11px 8px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;}
+.hbtn-g{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;}
+.hbtn-w{background:#fff;color:var(--gd);}
+
+/* ── 알람 배너 ── */
+.alarm-wrap{margin:12px 16px 0;border-radius:16px;overflow:hidden;box-shadow:var(--sh);}
+.alarm-head{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;cursor:pointer;user-select:none;}
+.alarm-head-txt{flex:1;}
+.alarm-fold{background:rgba(255,255,255,.25);border:none;border-radius:8px;padding:4px 10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.alarm-body{background:#fff;overflow:hidden;transition:max-height .3s ease;}
+.alarm-item{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #fef2f2;}
+.alarm-item:last-child{border-bottom:none;}
+.alarm-dday{background:#fef2f2;color:#dc2626;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:900;min-width:52px;text-align:center;line-height:1.2;flex-shrink:0;}
+.alarm-dday span{font-size:10px;display:block;font-weight:600;}
+.alarm-info{flex:1;cursor:pointer;}
+.alarm-course-txt{font-size:14px;font-weight:800;color:var(--tx);}
+.alarm-date-txt{font-size:11px;color:var(--tm);margin-top:2px;}
+.alarm-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+.btn-alarm-ok{background:#d1fae5;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:#1a6b3c;cursor:pointer;font-family:inherit;}
+.btn-alarm-cancel{background:#fee2e2;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:#dc2626;cursor:pointer;font-family:inherit;}
+.notif-req{margin:12px 16px 0;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);}
+.notif-req-txt{flex:1;color:#fff;font-size:13px;font-weight:600;line-height:1.5;}
+.notif-req-btn{background:#fff;color:#1e40af;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}
+
+/* ── 탭 ── */
+.top-tabs{display:flex;gap:4px;margin:14px 16px 10px;background:#fff;border-radius:12px;padding:4px;box-shadow:var(--sh);}
+.top-tab{flex:1;border:none;border-radius:9px;padding:9px 4px;font-weight:700;cursor:pointer;font-size:11px;background:transparent;color:var(--tl);font-family:inherit;}
+.top-tab.active{background:var(--g);color:#fff;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--bd);display:flex;padding:8px 0 20px;z-index:100;box-shadow:0 -4px 20px rgba(26,71,49,.1);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;cursor:pointer;font-family:inherit;padding:4px 0;}
+.nav-icon{font-size:20px;}
+.nav-label{font-size:10px;font-weight:600;color:var(--tl);}
+.nav-btn.active .nav-label{color:var(--g);}
+
+/* ── 캘린더 ── */
+.cal-hd{display:flex;justify-content:space-between;align-items:center;padding:0 16px 10px;}
+.cal-nav{background:none;border:none;font-size:22px;cursor:pointer;color:var(--g);padding:6px 10px;border-radius:8px;}
+.cal-month{font-size:18px;font-weight:900;color:var(--gd);}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;margin-bottom:4px;}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--tl);padding:4px 0;}
+.cal-dow:first-child{color:#ef4444;}.cal-dow:last-child{color:#3b82f6;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 12px;}
+.cal-cell{min-height:56px;border-radius:10px;padding:4px 3px;cursor:pointer;transition:background .12s;}
+.cal-cell:active{background:var(--gp);}
+.cal-cell.other .day-n{opacity:.3;}
+.cal-cell.today .day-n{background:var(--g);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 2px;}
+.cal-cell.sun .day-n{color:#ef4444;}.cal-cell.sat .day-n{color:#3b82f6;}
+.cal-cell.sel{background:var(--gp);outline:2px solid var(--g);}
+.day-n{font-size:12px;font-weight:700;text-align:center;margin-bottom:2px;}
+.day-dots{display:flex;flex-direction:column;gap:2px;}
+.day-dot{border-radius:3px;padding:1px 4px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dot-confirmed{background:var(--cfb);color:var(--cf);}
+.dot-open{background:var(--opb);color:var(--op);}
+.dot-planned{background:var(--plb);color:var(--pl);}
+
+/* ── 일정 카드 ── */
+.sec-title{font-size:13px;font-weight:800;color:var(--gd);padding:4px 16px 8px;display:flex;align-items:center;gap:6px;}
+.sche-list{padding:0 16px;display:flex;flex-direction:column;gap:10px;}
+.sche-card{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--sh);border-left:4px solid var(--g);}
+.sche-card.confirmed{border-left-color:var(--cf);}
+.sche-card.open{border-left-color:var(--op);}
+.sche-card.planned{border-left-color:var(--pl);}
+.sche-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.sche-date{font-size:13px;font-weight:800;color:var(--gd);}
+.sche-badge{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;}
+.bc{background:var(--cfb);color:var(--cf);}
+.bo{background:var(--opb);color:var(--op);}
+.bp{background:var(--plb);color:var(--pl);}
+.sche-course{font-size:19px;font-weight:900;color:var(--tx);margin-bottom:6px;}
+.sche-info{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{background:var(--gp);color:var(--gd);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;}
+.chip-cost{background:#fef9c3;color:#854d0e;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;}
+.sche-detail{font-size:12px;color:var(--tm);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:8px;}
+.photo-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:8px;scrollbar-width:none;}
+.photo-row::-webkit-scrollbar{display:none;}
+.photo-thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;flex-shrink:0;cursor:pointer;border:2px solid var(--bd);}
+.sche-btns{display:flex;gap:6px;}
+.btn-edit{flex:1;background:var(--gp);border:none;border-radius:10px;padding:8px;font-size:12px;color:var(--gd);font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-del{flex:1;background:#fee2e2;border:none;border-radius:10px;padding:8px;font-size:12px;color:#dc2626;font-weight:700;cursor:pointer;font-family:inherit;}
+.empty{text-align:center;padding:48px 20px;color:var(--tl);font-size:14px;line-height:2;}
+
+/* ── 필터 ── */
+.filter-bar{display:flex;gap:8px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.fbtn{border:1.5px solid var(--bd);border-radius:999px;padding:6px 14px;font-weight:600;font-size:12px;cursor:pointer;background:#fff;color:var(--tm);white-space:nowrap;font-family:inherit;flex-shrink:0;}
+.fbtn.active{border-color:var(--g);background:var(--g);color:#fff;}
+
+/* ── 통계 ── */
+.stats-row{display:flex;gap:10px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none;}
+.stats-row::-webkit-scrollbar{display:none;}
+.stat-card{min-width:130px;background:#fff;border-radius:14px;padding:14px;box-shadow:var(--sh);flex-shrink:0;}
+.stat-icon{font-size:22px;margin-bottom:6px;}
+.stat-label{font-size:10px;color:var(--tl);font-weight:600;letter-spacing:.5px;}
+.stat-val{font-size:20px;font-weight:900;color:var(--gd);margin-top:3px;}
+.stat-sub{font-size:11px;color:var(--tm);margin-top:2px;}
+
+/* ── 동반자 랭킹 ── */
+.comp-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.comp-row{background:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);}
+.comp-rank{font-size:20px;font-weight:900;color:var(--gold);min-width:28px;text-align:center;}
+.comp-name{font-size:15px;font-weight:800;flex:1;}
+.comp-bar-bg{flex:2;background:var(--bg);border-radius:999px;height:8px;overflow:hidden;}
+.comp-bar{height:100%;background:linear-gradient(90deg,var(--g),var(--gm));border-radius:999px;}
+.comp-cnt{font-size:13px;font-weight:700;color:var(--gd);white-space:nowrap;}
+
+/* ── 비용 ── */
+.cost-card{margin:0 16px 12px;background:#fff;border-radius:16px;padding:18px;box-shadow:var(--sh);}
+.cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.cost-box{background:var(--bg);border-radius:10px;padding:10px;text-align:center;}
+.cost-box-label{font-size:10px;color:var(--tl);font-weight:600;}
+.cost-box-val{font-size:14px;font-weight:900;color:var(--gd);margin-top:4px;}
+
+/* ── 모달 (바텀시트) ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;}
+.sheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:94vh;overflow-y:auto;animation:up .25s ease;padding-bottom:40px;}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:40px;height:4px;background:var(--bd);border-radius:999px;margin:12px auto 0;}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--bg);}
+.sheet-title{font-size:17px;font-weight:900;color:var(--gd);}
+.sheet-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--tl);line-height:1;}
+.form-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.flabel{display:block;font-size:12px;font-weight:700;color:var(--tm);margin-bottom:6px;}
+.finput{width:100%;padding:13px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:15px;color:var(--tx);outline:none;background:#fafff9;font-family:inherit;transition:border-color .15s;}
+.finput:focus{border-color:var(--g);background:#fff;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fsec{font-size:12px;font-weight:800;color:var(--gd);padding:4px 0 2px;border-bottom:1.5px solid var(--gp);margin-bottom:2px;}
+.type-sel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.type-btn{border:2px solid var(--bd);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--tm);font-family:inherit;background:#fff;transition:all .15s;}
+.type-btn.sel-confirmed{border-color:var(--cf);background:var(--cfb);color:var(--cf);}
+.type-btn.sel-open{border-color:var(--op);background:var(--opb);color:var(--op);}
+.type-btn.sel-planned{border-color:var(--pl);background:var(--plb);color:var(--pl);}
+
+/* ── 골프장 칩 ── */
+.course-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.c-chip{border:2px solid var(--bd);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--tm);font-family:inherit;background:#fff;transition:all .15s;}
+.c-chip.on{border-color:var(--g);background:var(--g);color:#fff;}
+.direct-row{display:flex;gap:8px;margin-top:10px;}
+.direct-input{flex:1;padding:9px 12px;border:1.5px solid var(--bd);border-radius:12px;font-size:13px;font-family:inherit;outline:none;background:#fafff9;}
+.direct-input:focus{border-color:var(--g);}
+.btn-direct-add{background:var(--g);border:none;border-radius:12px;padding:9px 14px;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.direct-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+
+/* ── 동반자 태그 ── */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1.5px solid var(--bd);border-radius:12px;background:#fafff9;min-height:48px;align-items:center;cursor:text;}
+.tag-wrap:focus-within{border-color:var(--g);background:#fff;}
+.tag{background:var(--gp);color:var(--gd);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
+.tag-x{cursor:pointer;font-size:14px;line-height:1;opacity:.7;border:none;background:none;color:var(--gd);padding:0;font-family:inherit;}
+.tag-direct{background:#fef9c3;color:#854d0e;}
+.tag-input{border:none;outline:none;font-size:14px;font-family:inherit;background:transparent;min-width:100px;flex:1;padding:2px 4px;}
+
+/* ── 사진 ── */
+.photo-upload-area{display:flex;gap:8px;flex-wrap:wrap;}
+.photo-preview{width:72px;height:72px;border-radius:10px;object-fit:cover;border:2px solid var(--bd);}
+.photo-add-btn{width:72px;height:72px;border:2px dashed var(--bd);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:var(--tl);}
+.photo-add-btn span{font-size:10px;font-weight:600;margin-top:2px;}
+.btn-save{width:100%;background:linear-gradient(135deg,var(--g),var(--gm));color:#fff;border:none;border-radius:14px;padding:15px;font-weight:800;font-size:16px;cursor:pointer;font-family:inherit;margin-top:4px;}
+.btn-cancel{width:100%;background:var(--bg);color:var(--tm);border:none;border-radius:14px;padding:13px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit;margin-top:6px;}
+
+/* ── 사진 전체화면 ── */
+.photo-fs{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:flex;align-items:center;justify-content:center;}
+.photo-fs img{max-width:100%;max-height:90vh;border-radius:12px;}
+.photo-fs-x{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:40px;height:40px;font-size:20px;color:#fff;cursor:pointer;}
+
+/* ── 골프장 관리 ── */
+.manage-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.manage-item{background:#fff;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--sh);}
+.manage-name{font-size:15px;font-weight:700;}
+.default-badge{background:var(--gp);color:var(--gd);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:8px;}
+.btn-del-course{background:#fee2e2;border:none;border-radius:8px;padding:6px 12px;font-size:12px;color:#dc2626;font-weight:700;cursor:pointer;font-family:inherit;}
+.add-row{display:flex;gap:8px;padding:0 16px;margin-top:8px;}
+.add-input{flex:1;padding:11px 14px;border:1.5px solid var(--bd);border-radius:12px;font-size:14px;font-family:inherit;outline:none;background:#fafff9;}
+.add-input:focus{border-color:var(--g);}
+.btn-add-course{background:var(--g);border:none;border-radius:12px;padding:11px 18px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+
+/* ── 관리화면 직접입력 ── */
+.direct-form{margin:16px 16px 0;background:#fff;border-radius:16px;padding:18px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px;}
+.direct-form-title{font-size:13px;font-weight:800;color:var(--gd);margin-bottom:4px;}
+
+/* ── 공통 ── */
+.divider{height:8px;background:var(--bg);margin:8px 0;}
+.info-box{background:var(--gp);border-radius:12px;padding:14px;font-size:13px;color:var(--gd);line-height:1.9;margin:16px;}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="hd">
+  <div class="hd-sub">Golf Schedule</div>
+  <div class="hd-title">⛳ 골프 캘린더</div>
+  <div class="hd-btns">
+    <button class="hbtn hbtn-g" onclick="openAdd()">＋ 일정 추가</button>
+    <button class="hbtn hbtn-w" onclick="goManage()">⚙️ 골프장 관리</button>
+  </div>
+</div>
+
+<!-- 알람 -->
+<div id="notifReq"></div>
+<div id="alarmArea"></div>
+
+<!-- 메인 캘린더 -->
+<div id="mainCal">
+  <div class="top-tabs">
+    <button class="top-tab active" id="tt-cal" onclick="switchTab('cal')">📅 캘린더</button>
+    <button class="top-tab" id="tt-list" onclick="switchTab('list')">📋 목록</button>
+    <button class="top-tab" id="tt-stats" onclick="switchTab('stats')">📊 통계</button>
+    <button class="top-tab" id="tt-comp" onclick="switchTab('comp')">👥 동반자</button>
+    <button class="top-tab" id="tt-cost" onclick="switchTab('cost')">💰 비용</button>
+  </div>
+
+  <!-- 캘린더 뷰 -->
+  <div id="v-cal">
+    <div class="cal-hd">
+      <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="calLabel"></div>
+      <button class="cal-nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-dow-row">
+      <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+      <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="divider"></div>
+    <div class="sec-title" id="selDateTitle">📌 선택된 날짜 일정</div>
+    <div class="sche-list" id="selDayList"></div>
+  </div>
+
+  <!-- 목록 뷰 -->
+  <div id="v-list" style="display:none;">
+    <div class="filter-bar" id="filterBar"></div>
+    <div class="sche-list" id="fullList"></div>
+  </div>
+
+  <!-- 통계 뷰 -->
+  <div id="v-stats" style="display:none;">
+    <div class="stats-row" id="statsCards"></div>
+    <div class="divider"></div>
+    <div class="sec-title">🏌️ 골프장별 현황</div>
+    <div class="sche-list" id="statsCourses"></div>
+  </div>
+
+  <!-- 동반자 뷰 -->
+  <div id="v-comp" style="display:none;">
+    <div class="stats-row" id="compSummary"></div>
+    <div class="divider"></div>
+    <div class="sec-title">🏆 동반자 랭킹</div>
+    <div class="comp-list" id="compRank"></div>
+  </div>
+
+  <!-- 비용 뷰 -->
+  <div id="v-cost" style="display:none;">
+    <div class="cost-card" id="costSummary"></div>
+    <div class="divider"></div>
+    <div class="sec-title">📅 월별 비용</div>
+    <div class="sche-list" id="costMonthly"></div>
+    <div class="divider"></div>
+    <div class="sec-title">🏌️ 골프장별 평균 비용</div>
+    <div class="sche-list" id="costByCourse"></div>
+  </div>
+</div>
+
+<!-- 골프장 관리 -->
+<div id="mainManage" style="display:none;">
+  <div style="padding:14px 16px 8px;">
+    <button onclick="goCalendar()" style="background:var(--gp);border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--gd);cursor:pointer;font-family:inherit;">← 캘린더로</button>
+  </div>
+  <div class="sec-title">🏌️ 골프장 목록</div>
+  <div class="manage-list" id="manageList"></div>
+  <div class="add-row" style="margin-top:12px;">
+    <input class="add-input" id="newCourse" placeholder="골프장 이름 입력" onkeydown="if(event.key==='Enter')addCourse()">
+    <button class="btn-add-course" onclick="addCourse()">＋ 추가</button>
+  </div>
+
+  <!-- 관리화면 직접 입력 -->
+  <div style="padding:16px 16px 0;font-size:13px;font-weight:800;color:var(--gd);">📅 캘린더에 일정 직접 입력</div>
+  <div class="direct-form">
+    <div>
+      <div class="flabel">날짜 *</div>
+      <input class="finput" type="date" id="di-date">
+    </div>
+    <div>
+      <div class="flabel">골프장명 * (직접 입력)</div>
+      <input class="finput" type="text" id="di-course" placeholder="예: 파인비치 CC, 제주 오라 CC">
+    </div>
+    <div>
+      <div class="flabel">티오프 시간</div>
+      <input class="finput" type="time" id="di-time">
+    </div>
+    <div>
+      <div class="flabel">일정 유형</div>
+      <div class="type-sel">
+        <button class="type-btn sel-confirmed" id="di-confirmed" onclick="selDiType('confirmed')">🟢<br>동반자<br>확정</button>
+        <button class="type-btn" id="di-open" onclick="selDiType('open')">🟡<br>동반자<br>미정</button>
+        <button class="type-btn" id="di-planned" onclick="selDiType('planned')">🟣<br>예약<br>예정</button>
+      </div>
+    </div>
+    <div>
+      <div class="flabel">동반자 (입력 후 Enter)</div>
+      <div class="tag-wrap" id="diCompWrap" onclick="document.getElementById('diCompInput').focus()">
+        <input class="tag-input" id="diCompInput" placeholder="이름 입력 후 Enter" onkeydown="handleDiComp(event)">
+      </div>
+    </div>
+    <div>
+      <div class="flabel">메모</div>
+      <input class="finput" type="text" id="di-memo" placeholder="추가 메모 (선택)">
+    </div>
+    <button class="btn-save" onclick="saveDirect()">📅 캘린더에 추가</button>
+  </div>
+
+  <div class="info-box">
+    💡 <strong>색상 안내</strong><br>
+    🟢 <strong style="color:var(--cf)">동반자 확정</strong> — 함께 칠 사람이 정해진 예약<br>
+    🟡 <strong style="color:var(--op)">동반자 미정</strong> — 아직 동반자가 없는 예약<br>
+    🟣 <strong style="color:var(--pl)">예약 예정</strong> — 아직 예약 전, 계획 단계
+  </div>
+</div>
+
+<!-- 하단 네비 -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nb-cal" onclick="goCalendar();switchTab('cal')">
+    <span class="nav-icon">📅</span><span class="nav-label">캘린더</span>
+  </button>
+  <button class="nav-btn" id="nb-list" onclick="goCalendar();switchTab('list')">
+    <span class="nav-icon">📋</span><span class="nav-label">목록</span>
+  </button>
+  <button class="nav-btn" onclick="openAdd()">
+    <span class="nav-icon">➕</span><span class="nav-label">추가</span>
+  </button>
+  <button class="nav-btn" id="nb-stats" onclick="goCalendar();switchTab('stats')">
+    <span class="nav-icon">📊</span><span class="nav-label">통계</span>
+  </button>
+  <button class="nav-btn" id="nb-manage" onclick="goManage()">
+    <span class="nav-icon">⚙️</span><span class="nav-label">관리</span>
+  </button>
+</div>
+
+<!-- 일정 추가/수정 모달 -->
+<div class="overlay" id="formModal" style="display:none;" onclick="if(event.target===this)closeModal('formModal')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title" id="formTitle">⛳ 일정 추가</div>
+      <button class="sheet-close" onclick="closeModal('formModal')">✕</button>
+    </div>
+    <div class="form-body">
+      <div class="fsec">📋 기본 정보</div>
+
+      <div>
+        <div class="flabel">일정 유형</div>
+        <div class="type-sel">
+          <button class="type-btn sel-confirmed" id="ft-confirmed" onclick="selType('confirmed')">🟢<br>동반자<br>확정</button>
+          <button class="type-btn" id="ft-open" onclick="selType('open')">🟡<br>동반자<br>미정</button>
+          <button class="type-btn" id="ft-planned" onclick="selType('planned')">🟣<br>예약<br>예정</button>
+        </div>
+      </div>
+
+      <div class="frow">
+        <div><div class="flabel">날짜 *</div><input class="finput" type="date" id="f-date"></div>
+        <div><div class="flabel">티오프 시간</div><input class="finput" type="time" id="f-time"></div>
+      </div>
+
+      <div>
+        <div class="flabel">골프장 * (복수 선택 가능)</div>
+        <div class="course-chips" id="courseChips"></div>
+        <div class="direct-row">
+          <input class="direct-input" type="text" id="f-direct-course" placeholder="목록에 없는 골프장 직접 입력"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addDirectCourse();}">
+          <button class="btn-direct-add" onclick="addDirectCourse()">＋ 추가</button>
+        </div>
+        <div class="direct-tags" id="directCourseTags"></div>
+      </div>
+
+      <div>
+        <div class="flabel">동반자 (이름 입력 후 Enter 또는 + 버튼)</div>
+        <div class="tag-wrap" id="compWrap" onclick="document.getElementById('compInput').focus()">
+          <input class="tag-input" id="compInput" placeholder="이름 입력 후 Enter" onkeyup="handleComp(event)">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input class="direct-input" id="compInputBtn" placeholder="동반자 이름 입력" style="flex:1;">
+          <button class="btn-direct-add" onclick="addCompByBtn()">＋ 추가</button>
+        </div>
+      </div>
+
+      <div class="fsec">💰 비용 정보</div>
+      <div class="frow">
+        <div><div class="flabel">그린피 (원)</div><input class="finput" type="number" id="f-green" placeholder="0"></div>
+        <div><div class="flabel">카트비 (원)</div><input class="finput" type="number" id="f-cart" placeholder="0"></div>
+      </div>
+      <div class="frow">
+        <div><div class="flabel">캐디피 (원)</div><input class="finput" type="number" id="f-caddy" placeholder="0"></div>
+        <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
+      </div>
+
+      <div class="fsec">📷 사진 & 메모</div>
+      <div>
+        <div class="flabel">사진 추가</div>
+        <div class="photo-upload-area" id="photoArea">
+          <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
+            <span>📷</span><span>사진추가</span>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+        </div>
+      </div>
+      <div>
+        <div class="flabel">메모</div>
+        <textarea class="finput" id="f-memo" rows="3" style="resize:none;" placeholder="라운드 후기, 코스 상태 등"></textarea>
+      </div>
+
+      <button class="btn-save" onclick="saveSchedule()">💾 저장</button>
+      <button class="btn-cancel" onclick="closeModal('formModal')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 전체화면 -->
+<div class="photo-fs" id="photoFS" style="display:none;" onclick="closeModal('photoFS')">
+  <button class="photo-fs-x" onclick="closeModal('photoFS')">✕</button>
+  <img id="photoFSImg" src="">
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 데이터 & 상태
+// ═══════════════════════════════════════
+const DEFAULT_COURSES = ['아시아나','렉스필드','태광','설해원'];
+
+let courses   = JSON.parse(localStorage.getItem('golf_courses')   || 'null') || [...DEFAULT_COURSES];
+let schedules = JSON.parse(localStorage.getItem('golf_schedules') || '[]');
+let confirmedAlarms = JSON.parse(localStorage.getItem('golf_confirmed_alarms') || '[]');
+
+// 폼 상태
+let editId        = null;
+let formType      = 'confirmed';
+let formComps     = [];      // 동반자 배열
+let formCourses   = [];      // 선택된 골프장 (칩+직접입력 통합)
+let formPhotos    = [];      // base64 사진
+
+// 관리화면 직접입력 상태
+let diType  = 'confirmed';
+let diComps = [];
+
+// 필터 상태
+let filterCourse = 'all';
+let filterType   = 'all';
+let filterSort   = 'date-asc';
+
+// 캘린더 상태
+const today = new Date();
+let calYear  = today.getFullYear();
+let calMonth = today.getMonth();
+let selDate  = toDateStr(today);
+
+// 알람 접기 상태
+let alarmFolded = false;
+
+// 현재 탭
+let curTab = 'cal';
+
+// ═══════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════
+function toDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
+function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('ko-KR').format(n)+'원'; }
+function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
+function nextId(){ return schedules.length ? Math.max(...schedules.map(s=>s.id))+1 : 1; }
+function saveData(){
+  localStorage.setItem('golf_courses',   JSON.stringify(courses));
+  localStorage.setItem('golf_schedules', JSON.stringify(schedules));
+  localStorage.setItem('golf_confirmed_alarms', JSON.stringify(confirmedAlarms));
+}
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+// ═══════════════════════════════════════
+// 화면 전환
+// ═══════════════════════════════════════
+function goCalendar(){
+  document.getElementById('mainCal').style.display = 'block';
+  document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('nb-manage').classList.remove('active');
+}
+function goManage(){
+  document.getElementById('mainCal').style.display = 'none';
+  document.getElementById('mainManage').style.display = 'block';
+  ['nb-cal','nb-list','nb-stats'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  document.getElementById('nb-manage').classList.add('active');
+  renderManage();
+}
+function switchTab(t){
+  curTab = t;
+  ['cal','list','stats','comp','cost'].forEach(k=>{
+    document.getElementById('tt-'+k)?.classList.toggle('active', k===t);
+    const v = document.getElementById('v-'+k);
+    if(v) v.style.display = k===t ? 'block' : 'none';
+    const n = document.getElementById('nb-'+k);
+    if(n) n.classList.toggle('active', k===t);
+  });
+  if(t==='cal')   renderCalendar();
+  if(t==='list')  { renderFilterBar(); renderFullList(); }
+  if(t==='stats') renderStats();
+  if(t==='comp')  renderCompStats();
+  if(t==='cost')  renderCostStats();
+}
+
+// ═══════════════════════════════════════
+// 캘린더
+// ═══════════════════════════════════════
+function renderCalendar(){
+  document.getElementById('calLabel').textContent = `${calYear}년 ${calMonth+1}월`;
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days  = new Date(calYear, calMonth+1, 0).getDate();
+  const prev  = new Date(calYear, calMonth, 0).getDate();
+  const cells = Math.ceil((first+days)/7)*7;
+  let html='';
+  for(let i=0;i<cells;i++){
+    let d,m=calMonth,y=calYear,other=false;
+    if(i<first){ d=prev-first+i+1; m=calMonth-1; if(m<0){m=11;y--;} other=true; }
+    else if(i>=first+days){ d=i-first-days+1; m=calMonth+1; if(m>11){m=0;y++;} other=true; }
+    else{ d=i-first+1; }
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = ds===toDateStr(today);
+    const isSel   = ds===selDate;
+    const dow     = i%7;
+    const ss      = schedules.filter(s=>s.date===ds);
+    let cls = 'cal-cell'+(other?' other':'')+(isToday?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'')+(isSel?' sel':'');
+    const dots = ss.slice(0,2).map(s=>`<div class="day-dot dot-${s.type}">${(s.courses||[]).join('/').slice(0,5)||'?'}</div>`).join('');
+    const more = ss.length>2 ? `<div class="day-dot" style="background:#e2e8f0;color:#64748b;">+${ss.length-2}</div>` : '';
+    html+=`<div class="${cls}" onclick="selDay('${ds}')"><div class="day-n">${d}</div><div class="day-dots">${dots}${more}</div></div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+  renderSelDay();
+}
+function selDay(ds){ selDate=ds; renderCalendar(); }
+function renderSelDay(){
+  const ss = schedules.filter(s=>s.date===selDate);
+  const dt = new Date(selDate+'T00:00:00');
+  document.getElementById('selDateTitle').textContent = `📌 ${dt.getMonth()+1}월 ${dt.getDate()}일 (${ss.length}건)`;
+  document.getElementById('selDayList').innerHTML = ss.length ? ss.map(scheCard).join('') : '<div class="empty"><span style="font-size:40px;display:block;margin-bottom:8px;">🌿</span>이 날 일정이 없습니다</div>';
+}
+function changeMonth(d){ calMonth+=d; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+// ═══════════════════════════════════════
+// 일정 카드
+// ═══════════════════════════════════════
+function scheCard(s){
+  const tl = s.type==='confirmed'?'🟢 동반자 확정':s.type==='open'?'🟡 동반자 미정':'🟣 예약 예정';
+  const bc = s.type==='confirmed'?'bc':s.type==='open'?'bo':'bp';
+  const courseStr = (s.courses||[]).join(', ')||'미정';
+  const compStr   = (s.companions||[]).length?(s.companions||[]).join(', '):'미정';
+  const timeStr   = s.time ? ` · ${s.time} 티오프` : '';
+  const tc = totalCost(s);
+
+  let costDetail='';
+  if(s.green||s.cart||s.caddy||s.other){
+    const items=[];
+    if(s.green) items.push(`그린피 ${fmtMoney(s.green)}`);
+    if(s.cart)  items.push(`카트 ${fmtMoney(s.cart)}`);
+    if(s.caddy) items.push(`캐디 ${fmtMoney(s.caddy)}`);
+    if(s.other) items.push(`기타 ${fmtMoney(s.other)}`);
+    costDetail=`<div class="sche-detail">💳 ${items.join(' · ')}</div>`;
+  }
+  const photos=(s.photos||[]);
+  const photoHtml = photos.length ? `<div class="photo-row">${photos.map(p=>`<img class="photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>` : '';
+  const memoHtml  = s.memo ? `<div class="sche-detail">📝 ${s.memo}</div>` : '';
+
+  return `<div class="sche-card ${s.type}">
+    <div class="sche-top">
+      <div class="sche-date">${fmtDate(s.date)}${timeStr}</div>
+      <span class="sche-badge ${bc}">${tl}</span>
+    </div>
+    <div class="sche-course">${courseStr}</div>
+    <div class="sche-info">
+      <span class="chip">👥 ${compStr}</span>
+      ${(s.companions||[]).length?`<span class="chip">${(s.companions||[]).length+1}명</span>`:''}
+      ${tc>0?`<span class="chip-cost">💰 ${fmtMoney(tc)}</span>`:''}
+    </div>
+    ${costDetail}${photoHtml}${memoHtml}
+    <div class="sche-btns">
+      <button class="btn-edit" onclick="openEdit(${s.id})">✏️ 수정</button>
+      <button class="btn-del"  onclick="delSchedule(${s.id})">🗑️ 삭제</button>
+    </div>
+  </div>`;
+}
+function viewPhoto(src){ document.getElementById('photoFSImg').src=src; document.getElementById('photoFS').style.display='flex'; }
+
+// ═══════════════════════════════════════
+// 목록
+// ═══════════════════════════════════════
+function renderFilterBar(){
+  const co=[['all','전체'],...courses.map(c=>[c,c])];
+  const to=[['all','전체'],['confirmed','🟢확정'],['open','🟡미정'],['planned','🟣예정']];
+  const so=[['date-asc','날짜↑'],['date-desc','날짜↓'],['cost-desc','비용↓'],['course','골프장']];
+  document.getElementById('filterBar').innerHTML=
+    `<span style="font-size:11px;font-weight:700;color:var(--tl);padding:6px 2px;white-space:nowrap;">골프장:</span>`+
+    co.map(([k,l])=>`<button class="fbtn${filterCourse===k?' active':''}" onclick="setFilter('c','${k}')">${l}</button>`).join('')+
+    `<span style="width:1px;background:var(--bd);margin:4px 2px;flex-shrink:0;"></span>`+
+    `<span style="font-size:11px;font-weight:700;color:var(--tl);padding:6px 2px;white-space:nowrap;">유형:</span>`+
+    to.map(([k,l])=>`<button class="fbtn${filterType===k?' active':''}" onclick="setFilter('t','${k}')">${l}</button>`).join('')+
+    `<span style="width:1px;background:var(--bd);margin:4px 2px;flex-shrink:0;"></span>`+
+    so.map(([k,l])=>`<button class="fbtn${filterSort===k?' active':''}" onclick="setFilter('s','${k}')">${l}</button>`).join('');
+}
+function setFilter(k,v){ if(k==='c')filterCourse=v; if(k==='t')filterType=v; if(k==='s')filterSort=v; renderFilterBar(); renderFullList(); }
+function renderFullList(){
+  let list=[...schedules];
+  if(filterCourse!=='all') list=list.filter(s=>(s.courses||[]).includes(filterCourse));
+  if(filterType!=='all')   list=list.filter(s=>s.type===filterType);
+  list.sort((a,b)=>{
+    if(filterSort==='date-asc')  return a.date.localeCompare(b.date);
+    if(filterSort==='date-desc') return b.date.localeCompare(a.date);
+    if(filterSort==='cost-desc') return totalCost(b)-totalCost(a);
+    return (a.courses||[]).join().localeCompare((b.courses||[]).join());
+  });
+  document.getElementById('fullList').innerHTML = list.length ? list.map(scheCard).join('') : '<div class="empty"><span style="font-size:40px;display:block;">🌿</span>조건에 맞는 일정이 없습니다</div>';
+}
+
+// ═══════════════════════════════════════
+// 통계
+// ═══════════════════════════════════════
+function renderStats(){
+  const n=toDateStr(today);
+  const total=schedules.length;
+  const upcoming=schedules.filter(s=>s.date>=n).length;
+  document.getElementById('statsCards').innerHTML=[
+    {icon:'📅',label:'전체 일정',val:total+'건',sub:'등록된 골프 일정'},
+    {icon:'🟢',label:'동반자 확정',val:schedules.filter(s=>s.type==='confirmed').length+'건',sub:'확정 예약'},
+    {icon:'🟡',label:'동반자 미정',val:schedules.filter(s=>s.type==='open').length+'건',sub:'동반자 찾는 중'},
+    {icon:'🟣',label:'예약 예정',val:schedules.filter(s=>s.type==='planned').length+'건',sub:'계획 단계'},
+    {icon:'⏰',label:'다가오는 일정',val:upcoming+'건',sub:'오늘 이후'},
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-label">${s.label}</div><div class="stat-val">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+
+  const byC=courses.map(c=>{
+    const cs=schedules.filter(s=>(s.courses||[]).includes(c));
+    return {name:c,count:cs.length,upcoming:cs.filter(s=>s.date>=n).length};
+  }).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
+  document.getElementById('statsCourses').innerHTML=byC.length?byC.map(c=>`
+    <div class="sche-card confirmed" style="padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sche-course" style="font-size:16px;margin:0;">🏌️ ${c.name}</div>
+        <span class="chip">총 ${c.count}회</span>
+      </div>
+      <div class="sche-info" style="margin-top:8px;margin-bottom:0;">
+        <span class="chip">다가오는 ${c.upcoming}건</span>
+        <span class="chip">지난 ${c.count-c.upcoming}건</span>
+      </div>
+    </div>`).join(''):'<div class="empty"><span style="font-size:40px;display:block;">📊</span>아직 일정이 없습니다</div>';
+}
+
+// ═══════════════════════════════════════
+// 동반자 통계
+// ═══════════════════════════════════════
+function renderCompStats(){
+  const map={};
+  schedules.forEach(s=>(s.companions||[]).forEach(c=>{ map[c]=(map[c]||0)+1; }));
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('compSummary').innerHTML=[
+    {icon:'👥',label:'총 동반자 수',val:sorted.length+'명',sub:'함께 라운드한 사람'},
+    {icon:'🏆',label:'최다 동반자',val:sorted[0]?sorted[0][0]:'없음',sub:sorted[0]?sorted[0][1]+'회 함께':''},
+    {icon:'⛳',label:'동반 라운드',val:schedules.filter(s=>(s.companions||[]).length>0).length+'건',sub:'동반자 있는 라운드'},
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-label">${s.label}</div><div class="stat-val">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('compRank').innerHTML=sorted.length?sorted.map(([name,cnt],i)=>`
+    <div class="comp-row">
+      <div class="comp-rank">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
+      <div class="comp-name">${name}</div>
+      <div class="comp-bar-bg"><div class="comp-bar" style="width:${cnt/max*100}%"></div></div>
+      <div class="comp-cnt">${cnt}회</div>
+    </div>`).join(''):'<div class="empty"><span style="font-size:40px;display:block;">👥</span>동반자 기록이 없습니다</div>';
+}
+
+// ═══════════════════════════════════════
+// 비용 통계
+// ═══════════════════════════════════════
+function renderCostStats(){
+  const wc=schedules.filter(s=>totalCost(s)>0);
+  const tot=wc.reduce((a,s)=>a+totalCost(s),0);
+  const avg=wc.length?Math.round(tot/wc.length):0;
+  const maxS=[...wc].sort((a,b)=>totalCost(b)-totalCost(a))[0];
+  document.getElementById('costSummary').innerHTML=`
+    <h3 style="font-size:14px;font-weight:900;color:var(--gd);margin-bottom:12px;">💰 비용 종합</h3>
+    <div class="cost-grid">
+      <div class="cost-box"><div class="cost-box-label">총 지출</div><div class="cost-box-val">${fmtMoney(tot)}</div></div>
+      <div class="cost-box"><div class="cost-box-label">평균 비용</div><div class="cost-box-val">${fmtMoney(avg)}</div></div>
+      <div class="cost-box"><div class="cost-box-label">기록 라운드</div><div class="cost-box-val">${wc.length}건</div></div>
+    </div>
+    ${maxS?`<div style="margin-top:12px;background:var(--gp);border-radius:10px;padding:10px;font-size:12px;color:var(--gd);">💸 최고: <strong>${(maxS.courses||[]).join(',')} ${fmtDate(maxS.date)}</strong> — ${fmtMoney(totalCost(maxS))}</div>`:''}`;
+
+  const byM={};
+  schedules.forEach(s=>{ if(!totalCost(s))return; const ym=s.date.slice(0,7); byM[ym]=(byM[ym]||0)+totalCost(s); });
+  document.getElementById('costMonthly').innerHTML=Object.keys(byM).sort().reverse().map(ym=>{
+    const [y,m]=ym.split('-');
+    const cnt=schedules.filter(s=>s.date.startsWith(ym)&&totalCost(s)>0).length;
+    return`<div class="sche-card confirmed" style="padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sche-course" style="font-size:15px;margin:0;">📅 ${y}년 ${m}월</div>
+        <span class="chip-cost">${fmtMoney(byM[ym])}</span>
+      </div>
+      <div class="sche-info" style="margin-top:8px;margin-bottom:0;">
+        <span class="chip">${cnt}라운드</span>
+        <span class="chip">평균 ${fmtMoney(Math.round(byM[ym]/cnt))}</span>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty"><span style="font-size:40px;display:block;">💰</span>비용 기록이 없습니다</div>';
+
+  const byC={};
+  schedules.forEach(s=>{ if(!totalCost(s))return; (s.courses||[]).forEach(c=>{ if(!byC[c])byC[c]={t:0,n:0}; byC[c].t+=totalCost(s); byC[c].n++; }); });
+  document.getElementById('costByCourse').innerHTML=Object.keys(byC).sort((a,b)=>byC[b].t-byC[a].t).map(c=>`
+    <div class="sche-card open" style="padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sche-course" style="font-size:15px;margin:0;">🏌️ ${c}</div>
+        <span class="chip-cost">합계 ${fmtMoney(byC[c].t)}</span>
+      </div>
+      <div class="sche-info" style="margin-top:8px;margin-bottom:0;">
+        <span class="chip">${byC[c].n}회</span>
+        <span class="chip">평균 ${fmtMoney(Math.round(byC[c].t/byC[c].n))}</span>
+      </div>
+    </div>`).join('')||'<div class="empty"><span style="font-size:40px;display:block;">🏌️</span>골프장별 비용 기록이 없습니다</div>';
+}
+
+// ═══════════════════════════════════════
+// 8일 전 알람
+// ═══════════════════════════════════════
+function daysUntil(ds){ const n=new Date(); n.setHours(0,0,0,0); return Math.round((new Date(ds+'T00:00:00')-n)/86400000); }
+
+function renderAlarm(){
+  // 알림 권한 요청
+  const nrEl=document.getElementById('notifReq');
+  if('Notification' in window && Notification.permission==='default'){
+    nrEl.innerHTML=`<div class="notif-req">
+      <div class="notif-req-txt">🔔 8일 전 예약취소 알림을 받으시겠어요?</div>
+      <button class="notif-req-btn" onclick="reqNotif()">알림 허용</button>
+    </div>`;
+  } else { nrEl.innerHTML=''; }
+
+  // 오래된 확인 알람 정리
+  const validIds=schedules.map(s=>s.id);
+  confirmedAlarms=confirmedAlarms.filter(id=>validIds.includes(id));
+
+  const n=toDateStr(today);
+  const urgent=schedules
+    .filter(s=>s.type!=='planned' && s.date>=n && !confirmedAlarms.includes(s.id))
+    .map(s=>({...s,dd:daysUntil(s.date)}))
+    .filter(s=>s.dd>=0 && s.dd<=8)
+    .sort((a,b)=>a.dd-b.dd);
+
+  const el=document.getElementById('alarmArea');
+  if(!urgent.length){ el.innerHTML=''; return; }
+
+  const items=urgent.map(s=>{
+    const lbl=s.dd===0?'오늘!':s.dd===1?'내일!':s.dd+'일 후';
+    const icon=s.dd===0?'🚨':s.dd<=2?'⚠️':'🔔';
+    const courseStr=(s.courses||[]).join(', ')||'미정';
+    const compStr=(s.companions||[]).join(', ')||'미정';
+    return`<div class="alarm-item">
+      <div class="alarm-dday">${icon}<span>${lbl}</span></div>
+      <div class="alarm-info" onclick="openEdit(${s.id})">
+        <div class="alarm-course-txt">${courseStr}</div>
+        <div class="alarm-date-txt">${fmtDate(s.date)}${s.time?' · '+s.time:''}　👥 ${compStr}</div>
+      </div>
+      <div class="alarm-btns">
+        <button class="btn-alarm-ok"     onclick="okAlarm(${s.id})">✅ 확인</button>
+        <button class="btn-alarm-cancel" onclick="cancelReserve(${s.id})">예약취소</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const foldTxt=alarmFolded?'펼치기 ▼':'접기 ▲';
+  const bodyStyle=alarmFolded?'max-height:0;':'max-height:2000px;';
+  el.innerHTML=`<div class="alarm-wrap">
+    <div class="alarm-head" onclick="toggleAlarm()">
+      <div class="alarm-head-txt">🔔 예약취소 확인 필요 (${urgent.length}건)</div>
+      <button class="alarm-fold" onclick="event.stopPropagation();toggleAlarm()">${foldTxt}</button>
+    </div>
+    <div class="alarm-body" id="alarmBody" style="${bodyStyle}">${items}</div>
+  </div>`;
+}
+
+function toggleAlarm(){
+  alarmFolded=!alarmFolded;
+  const b=document.getElementById('alarmBody');
+  if(b) b.style.maxHeight=alarmFolded?'0':'2000px';
+  renderAlarm();
+}
+function okAlarm(id){
+  if(!confirmedAlarms.includes(id)) confirmedAlarms.push(id);
+  saveData(); renderAlarm();
+}
+function cancelReserve(id){
+  const s=schedules.find(x=>x.id===id); if(!s) return;
+  if(confirm(`⚠️ 예약 취소\n\n골프장: ${(s.courses||[]).join(', ')||'미정'}\n날짜: ${fmtDate(s.date)}\n\n이 일정을 취소(삭제)하시겠습니까?`)){
+    schedules=schedules.filter(x=>x.id!==id);
+    saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
+  }
+}
+function reqNotif(){
+  if(!('Notification' in window)) return;
+  Notification.requestPermission().then(p=>{ renderAlarm(); if(p==='granted') pushNotifs(); });
+}
+function pushNotifs(){
+  if(Notification.permission!=='granted') return;
+  const n=toDateStr(today);
+  schedules.filter(s=>s.type!=='planned'&&s.date>=n)
+    .map(s=>({...s,dd:daysUntil(s.date)})).filter(s=>s.dd>=0&&s.dd<=8)
+    .forEach(s=>{ new Notification(`⛳ 골프 일정 알림 (${s.dd===0?'오늘':s.dd+'일 후'})`,{body:`${(s.courses||[]).join(',')} · ${fmtDate(s.date)}`}); });
+}
+
+// ═══════════════════════════════════════
+// 골프장 관리
+// ═══════════════════════════════════════
+function renderManage(){
+  document.getElementById('manageList').innerHTML=courses.map((c,i)=>`
+    <div class="manage-item">
+      <div><span class="manage-name">${c}</span>${DEFAULT_COURSES.includes(c)?'<span class="default-badge">기본</span>':''}</div>
+      <button class="btn-del-course" onclick="delCourse(${i})">삭제</button>
+    </div>`).join('');
+}
+function addCourse(){
+  const name=document.getElementById('newCourse').value.trim();
+  if(!name) return;
+  if(courses.includes(name)){ alert('이미 있는 골프장입니다.'); return; }
+  courses.push(name); saveData(); document.getElementById('newCourse').value=''; renderManage();
+}
+function delCourse(i){
+  if(!confirm(`"${courses[i]}" 골프장을 삭제하시겠습니까?`)) return;
+  courses.splice(i,1); saveData(); renderManage();
+}
+
+// ═══════════════════════════════════════
+// 관리화면 직접 입력
+// ═══════════════════════════════════════
+function selDiType(t){
+  diType=t;
+  ['confirmed','open','planned'].forEach(k=>{
+    document.getElementById('di-'+k).className='type-btn'+(k===t?' sel-'+k:'');
+  });
+}
+function handleDiComp(e){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const v=e.target.value.trim();
+    if(v&&!diComps.includes(v)){ diComps.push(v); renderDiComps(); }
+    else e.target.value='';
+  }
+}
+function renderDiComps(){
+  const wrap=document.getElementById('diCompWrap');
+  const tags=diComps.map((c,i)=>`<span class="tag">${c}<button class="tag-x" onclick="removeDiComp(${i})">×</button></span>`).join('');
+  const inp=`<input class="tag-input" id="diCompInput" placeholder="${diComps.length?'':'이름 입력 후 Enter'}" onkeydown="handleDiComp(event)">`;
+  wrap.innerHTML=tags+inp;
+}
+function removeDiComp(i){ diComps.splice(i,1); renderDiComps(); }
+function saveDirect(){
+  const date=document.getElementById('di-date').value;
+  const name=document.getElementById('di-course').value.trim();
+  if(!date){ alert('날짜를 입력해주세요.'); return; }
+  if(!name){ alert('골프장명을 입력해주세요.'); return; }
+  if(!courses.includes(name)){ courses.push(name); }
+  schedules.push({
+    id:nextId(), date, time:document.getElementById('di-time').value,
+    type:diType, courses:[name], companions:[...diComps],
+    green:0,cart:0,caddy:0,other:0,
+    memo:document.getElementById('di-memo').value.trim(), photos:[],
+  });
+  saveData();
+  // 초기화
+  document.getElementById('di-date').value=toDateStr(today);
+  document.getElementById('di-course').value='';
+  document.getElementById('di-time').value='';
+  document.getElementById('di-memo').value='';
+  diComps=[]; selDiType('confirmed'); renderDiComps(); renderManage();
+  renderAll();
+  alert(`✅ "${name}" 일정이 캘린더에 추가되었습니다!`);
+}
+
+// ═══════════════════════════════════════
+// 일정 추가/수정 폼
+// ═══════════════════════════════════════
+function resetForm(){
+  formType='confirmed'; formComps=[]; formCourses=[]; formPhotos=[];
+  document.getElementById('f-date').value='';
+  document.getElementById('f-time').value='';
+  document.getElementById('f-green').value='';
+  document.getElementById('f-cart').value='';
+  document.getElementById('f-caddy').value='';
+  document.getElementById('f-other').value='';
+  document.getElementById('f-memo').value='';
+  document.getElementById('f-direct-course').value='';
+  document.getElementById('compInputBtn').value='';
+  selType('confirmed');
+  renderCompTags();
+  renderCourseChips();
+  renderPhotoArea();
+}
+function openAdd(ds){
+  editId=null;
+  document.getElementById('formTitle').textContent='⛳ 일정 추가';
+  resetForm();
+  // 파라미터로 날짜가 넘어오면 그 날짜, 없으면 캘린더에서 선택된 날짜(selDate) 사용
+  document.getElementById('f-date').value = ds || selDate || toDateStr(today);
+  document.getElementById('formModal').style.display='flex';
+  setTimeout(()=>{ document.querySelector('#formModal .finput')?.blur(); },100);
+}
+function openEdit(id){
+  const s=schedules.find(x=>x.id===id); if(!s) return;
+  editId=id;
+  document.getElementById('formTitle').textContent='✏️ 일정 수정';
+  formType=s.type||'confirmed';
+  formComps=[...(s.companions||[])];
+  formCourses=[...(s.courses||[])];
+  formPhotos=[...(s.photos||[])];
+  document.getElementById('f-date').value=s.date;
+  document.getElementById('f-time').value=s.time||'';
+  document.getElementById('f-green').value=s.green||'';
+  document.getElementById('f-cart').value=s.cart||'';
+  document.getElementById('f-caddy').value=s.caddy||'';
+  document.getElementById('f-other').value=s.other||'';
+  document.getElementById('f-memo').value=s.memo||'';
+  document.getElementById('f-direct-course').value='';
+  selType(formType);
+  renderCompTags();
+  renderCourseChips();
+  renderPhotoArea();
+  document.getElementById('formModal').style.display='flex';
+}
+function saveSchedule(){
+  const date=document.getElementById('f-date').value;
+  if(!date){ alert('날짜를 입력해주세요.'); return; }
+  if(!formCourses.length){ alert('골프장을 선택하거나 직접 입력해주세요.'); return; }
+  const obj={
+    date, time:document.getElementById('f-time').value,
+    type:formType, courses:[...formCourses], companions:[...formComps],
+    green:Number(document.getElementById('f-green').value)||0,
+    cart: Number(document.getElementById('f-cart').value)||0,
+    caddy:Number(document.getElementById('f-caddy').value)||0,
+    other:Number(document.getElementById('f-other').value)||0,
+    memo:document.getElementById('f-memo').value.trim(),
+    photos:[...formPhotos],
+  };
+  if(editId) schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
+  else schedules.push({...obj,id:nextId()});
+  // 직접입력 골프장 자동 등록
+  formCourses.forEach(c=>{ if(!courses.includes(c)) courses.push(c); });
+  saveData(); closeModal('formModal'); renderAll();
+}
+function delSchedule(id){
+  if(!confirm('일정을 삭제하시겠습니까?')) return;
+  schedules=schedules.filter(s=>s.id!==id); saveData(); renderAll();
+}
+
+// ── 일정 유형 선택 ──
+function selType(t){
+  formType=t;
+  ['confirmed','open','planned'].forEach(k=>{
+    document.getElementById('ft-'+k).className='type-btn'+(k===t?' sel-'+t:'');
+  });
+}
+
+// ── 골프장 칩 ──
+function renderCourseChips(){
+  // 칩: courses 목록 중 선택된 것 표시
+  document.getElementById('courseChips').innerHTML=courses.map(c=>`
+    <button class="c-chip${formCourses.includes(c)?' on':''}" onclick="toggleChip('${c}')">${c}</button>`).join('');
+  // 직접입력 태그: formCourses 중 courses에 없는 것
+  document.getElementById('directCourseTags').innerHTML=
+    formCourses.filter(c=>!courses.includes(c)).map(c=>`
+      <span class="tag tag-direct">⛳ ${c}<button class="tag-x" style="color:#854d0e;" onclick="removeDirectCourse('${c}')">×</button></span>`).join('');
+}
+function toggleChip(c){
+  formCourses.includes(c) ? formCourses=formCourses.filter(x=>x!==c) : formCourses.push(c);
+  renderCourseChips();
+}
+function addDirectCourse(){
+  const inp=document.getElementById('f-direct-course');
+  const name=inp.value.trim();
+  if(!name){ return; }
+  if(formCourses.includes(name)){ alert('이미 선택된 골프장입니다.'); inp.value=''; return; }
+  formCourses.push(name);
+  inp.value='';
+  renderCourseChips();
+}
+function removeDirectCourse(name){
+  formCourses=formCourses.filter(x=>x!==name);
+  renderCourseChips();
+}
+
+// ── 동반자 태그 ──
+function renderCompTags(){
+  const wrap=document.getElementById('compWrap');
+  Array.from(wrap.querySelectorAll('.tag')).forEach(el=>el.remove());
+  const inp=wrap.querySelector('.tag-input');
+  formComps.forEach((c,i)=>{
+    const span=document.createElement('span');
+    span.className='tag';
+    span.innerHTML=`${c}<button class="tag-x" onclick="removeComp(${i})">×</button>`;
+    wrap.insertBefore(span, inp);
+  });
+  inp.placeholder = formComps.length ? '' : '이름 입력 후 Enter';
+}
+
+function addComp(name){
+  const v = name.trim();
+  if(!v) return false;
+  if(formComps.includes(v)) return false;
+  formComps.push(v);
+  renderCompTags();
+  return true;
+}
+
+// keyup 방식 — Enter, 쉼표 감지
+function handleComp(e){
+  if(e.key==='Enter' || e.key===',' || e.keyCode===13 || e.keyCode===188){
+    e.preventDefault();
+    const v=e.target.value.trim().replace(/,$/,'');
+    if(addComp(v)) e.target.value='';
+  }
+}
+
+// 버튼으로 추가 (삼성 인터넷 Enter 안될 때 대안)
+function addCompByBtn(){
+  const inp=document.getElementById('compInputBtn');
+  if(addComp(inp.value)) inp.value='';
+  else if(!inp.value.trim()) alert('동반자 이름을 입력하세요.');
+}
+
+function removeComp(i){
+  formComps.splice(i,1);
+  renderCompTags();
+}
+
+// ── 사진 ──
+function handlePhotos(e){
+  Array.from(e.target.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=ev=>{ formPhotos.push(ev.target.result); renderPhotoArea(); };
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function renderPhotoArea(){
+  const area=document.getElementById('photoArea');
+  const thumbs=formPhotos.map((p,i)=>`
+    <div style="position:relative;display:inline-block;">
+      <img class="photo-preview" src="${p}" onclick="viewPhoto('${p}')">
+      <button onclick="removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:#dc2626;border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;font-weight:900;line-height:1;">×</button>
+    </div>`).join('');
+  area.innerHTML=thumbs+`
+    <div class="photo-add-btn" onclick="document.getElementById('photoInput').click()">
+      <span>📷</span><span>사진추가</span>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">`;
+}
+function removePhoto(i){ formPhotos.splice(i,1); renderPhotoArea(); }
+
+// ═══════════════════════════════════════
+// 전체 렌더
+// ═══════════════════════════════════════
+function renderAll(){
+  renderCalendar();
+  if(curTab==='list')  { renderFilterBar(); renderFullList(); }
+  if(curTab==='stats') renderStats();
+  if(curTab==='comp')  renderCompStats();
+  if(curTab==='cost')  renderCostStats();
+  renderAlarm();
+}
+
+// ═══════════════════════════════════════
+// 초기화
+// ═══════════════════════════════════════
+document.getElementById('f-date').value   = toDateStr(today);
+document.getElementById('di-date').value  = toDateStr(today);
+renderAll();
+if('Notification' in window && Notification.permission==='granted') pushNotifs();
+</script>
+</body>
+</html>
