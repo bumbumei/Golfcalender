@@ -25,7 +25,7 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .hd::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),#f59e0b,var(--gold));}
 .hd-sub{font-size:10px;letter-spacing:4px;opacity:.65;font-weight:600;}
 .hd-title{font-size:24px;font-weight:900;margin:4px 0 16px;}
-.hd-btns{display:flex;gap:8px;}
+.hd-btns{display:flex;gap:8px;position:relative;z-index:2;}
 .hbtn{flex:1;border:none;border-radius:12px;padding:11px 8px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;}
 .hbtn-g{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;}
 .hbtn-w{background:#fff;color:var(--gd);}
@@ -230,13 +230,13 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .auth-links{display:flex;justify-content:center;gap:16px;margin-top:12px;}
 
 /* ── 헤더 사용자 표시 ── */
-.hd-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);}
-.hd-user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;}
-.hd-user-name{font-size:13px;font-weight:700;opacity:.9;}
-.hd-user-email{font-size:10px;opacity:.6;margin-left:4px;}
-.hd-btns-right{display:flex;gap:6px;}
-.hd-logout-btn,.hd-admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.hd-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;position:relative;z-index:2;}
+.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);min-width:0;overflow:hidden;}
+.hd-user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;}
+.hd-user-name{font-size:13px;font-weight:700;opacity:.9;white-space:nowrap;}
+.hd-user-email{font-size:10px;opacity:.6;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hd-btns-right{display:flex;gap:6px;flex-shrink:0;}
+.hd-logout-btn,.hd-admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;z-index:3;touch-action:manipulation;}
 .hd-admin-btn{background:rgba(212,160,23,.3);border-color:rgba(212,160,23,.5);}
 
 /* ── 관리자 패널 ── */
@@ -729,6 +729,9 @@ function loginAs(id){
   localStorage.setItem('golf_current_user', id);
   loadUserData();
   hideAuthScreen();
+  document.getElementById('mainCal').style.display = 'block';
+  document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'none';
   renderHeaderUser();
   renderAll();
 }
@@ -769,10 +772,12 @@ async function doForgotPw(){
 
 // ── 로그아웃 ──
 function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?')) return;
   currentUser = null;
   localStorage.removeItem('golf_current_user');
-  document.getElementById('adminPanel').style.display = 'none';
-  document.getElementById('mainCal').style.display = 'block';
+  const ap = document.getElementById('adminPanel'); if(ap) ap.style.display = 'none';
+  const mc = document.getElementById('mainCal'); if(mc) mc.style.display = 'none';
+  const mm = document.getElementById('mainManage'); if(mm) mm.style.display = 'none';
   showAuthScreen();
   showLogin();
 }
