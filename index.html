@@ -224,14 +224,43 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--tl);}
 .auth-switch a{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;}
 .auth-error{background:#fee2e2;color:#dc2626;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
+.auth-success{background:#d1fae5;color:#1a6b3c;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
 .auth-migrate{background:var(--gp);color:var(--gd);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;text-align:center;margin-bottom:8px;}
+.auth-link{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13px;}
+.auth-links{display:flex;justify-content:center;gap:16px;margin-top:12px;}
 
 /* ── 헤더 사용자 표시 ── */
 .hd-user{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);}
+.hd-user-left{display:flex;align-items:center;gap:8px;flex:1;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:10px;border:1px solid rgba(255,255,255,.2);}
 .hd-user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;}
 .hd-user-name{font-size:13px;font-weight:700;opacity:.9;}
-.hd-logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.hd-user-email{font-size:10px;opacity:.6;margin-left:4px;}
+.hd-btns-right{display:flex;gap:6px;}
+.hd-logout-btn,.hd-admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.hd-admin-btn{background:rgba(212,160,23,.3);border-color:rgba(212,160,23,.5);}
+
+/* ── 관리자 패널 ── */
+.admin-panel{display:none;}
+.admin-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px;}
+.admin-title{font-size:18px;font-weight:900;color:var(--gd);}
+.admin-back{background:var(--gp);border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--gd);cursor:pointer;font-family:inherit;}
+.admin-stats{display:flex;gap:10px;padding:0 16px 12px;overflow-x:auto;}
+.admin-stat{min-width:100px;background:#fff;border-radius:14px;padding:14px;box-shadow:var(--sh);text-align:center;flex-shrink:0;}
+.admin-stat-val{font-size:22px;font-weight:900;color:var(--gd);}
+.admin-stat-label{font-size:11px;color:var(--tl);font-weight:600;margin-top:4px;}
+.admin-user-list{padding:0 16px;display:flex;flex-direction:column;gap:8px;}
+.admin-user-card{background:#fff;border-radius:14px;padding:16px;box-shadow:var(--sh);}
+.admin-user-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.admin-user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gm));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:900;flex-shrink:0;}
+.admin-user-info{flex:1;}
+.admin-user-name{font-size:15px;font-weight:800;color:var(--tx);}
+.admin-user-detail{font-size:11px;color:var(--tl);margin-top:2px;}
+.admin-badge{background:linear-gradient(135deg,#d4a017,#f59e0b);color:#fff;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px;}
+.admin-user-btns{display:flex;gap:6px;}
+.admin-ubtn{border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.admin-ubtn-reset{background:#fef3c7;color:#854d0e;}
+.admin-ubtn-del{background:#fee2e2;color:#dc2626;}
+.admin-ubtn-role{background:var(--gp);color:var(--gd);}
 </style>
 </head>
 <body>
@@ -248,8 +277,8 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
       <div class="auth-error" id="loginError"></div>
       <div class="auth-form">
         <div class="auth-field">
-          <label class="auth-label">아이디</label>
-          <input class="auth-input" id="loginId" type="text" placeholder="아이디 입력" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
+          <label class="auth-label">이메일</label>
+          <input class="auth-input" id="loginEmail" type="email" placeholder="example@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()">
         </div>
         <div class="auth-field">
           <label class="auth-label">비밀번호</label>
@@ -257,7 +286,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
         </div>
         <button class="auth-btn" onclick="doLogin()">로그인</button>
       </div>
-      <div class="auth-switch">계정이 없으신가요? <a onclick="showRegister()">회원가입</a></div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showRegister()">회원가입</a>
+        <a class="auth-link" onclick="showForgotPw()">비밀번호 찾기</a>
+      </div>
     </div>
 
     <!-- 회원가입 폼 -->
@@ -267,11 +299,11 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
       <div class="auth-form">
         <div class="auth-field">
           <label class="auth-label">이름</label>
-          <input class="auth-input" id="regName" type="text" placeholder="이름 입력" onkeydown="if(event.key==='Enter')document.getElementById('regId').focus()">
+          <input class="auth-input" id="regName" type="text" placeholder="이름 입력" onkeydown="if(event.key==='Enter')document.getElementById('regEmail').focus()">
         </div>
         <div class="auth-field">
-          <label class="auth-label">아이디</label>
-          <input class="auth-input" id="regId" type="text" placeholder="영문/숫자 4자 이상" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('regPw').focus()">
+          <label class="auth-label">이메일 (로그인 ID)</label>
+          <input class="auth-input" id="regEmail" type="email" placeholder="example@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('regPw').focus()">
         </div>
         <div class="auth-field">
           <label class="auth-label">비밀번호</label>
@@ -283,7 +315,26 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
         </div>
         <button class="auth-btn" onclick="doRegister()">회원가입</button>
       </div>
-      <div class="auth-switch">이미 계정이 있으신가요? <a onclick="showLogin()">로그인</a></div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+      </div>
+    </div>
+
+    <!-- 비밀번호 찾기 폼 -->
+    <div id="forgotPwForm" style="display:none;">
+      <div class="auth-box-sub">가입 시 사용한 이메일을 입력하세요</div>
+      <div class="auth-error" id="forgotError"></div>
+      <div class="auth-success" id="forgotSuccess"></div>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label class="auth-label">이메일</label>
+          <input class="auth-input" id="forgotEmail" type="email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')doForgotPw()">
+        </div>
+        <button class="auth-btn" onclick="doForgotPw()">임시 비밀번호 발송</button>
+      </div>
+      <div class="auth-links">
+        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+      </div>
     </div>
   </div>
 </div>
@@ -420,6 +471,18 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
   </div>
 </div>
 
+<!-- 관리자 패널 -->
+<div id="adminPanel" class="admin-panel">
+  <div class="admin-header">
+    <div class="admin-title">👑 사용자 관리</div>
+    <button class="admin-back" onclick="goCalendar()">← 캘린더로</button>
+  </div>
+  <div class="admin-stats" id="adminStats"></div>
+  <div class="divider"></div>
+  <div class="sec-title">📋 전체 사용자 목록</div>
+  <div class="admin-user-list" id="adminUserList"></div>
+</div>
+
 <!-- 하단 네비 -->
 <div class="bottom-nav">
   <button class="nav-btn active" id="nb-cal" onclick="goCalendar();switchTab('cal')">
@@ -525,20 +588,30 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 
 <script>
 // ═══════════════════════════════════════
-// 사용자 인증 (로그인/회원가입)
+// 사용자 인증 (이메일 로그인/회원가입)
 // ═══════════════════════════════════════
+const ADMIN_EMAIL = 'admin@golf.com'; // 관리자 기본 이메일
 let userList = JSON.parse(localStorage.getItem('golf_users') || '[]');
 let currentUser = localStorage.getItem('golf_current_user') || null;
 
 function getUserKey(key){ return `golf_${currentUser}_${key}`; }
 function saveUserList(){ localStorage.setItem('golf_users', JSON.stringify(userList)); }
+function isAdmin(){ const u = userList.find(x => x.id === currentUser); return u && u.role === 'admin'; }
 
-// 간단한 해시 함수 (SHA-256 대용, 클라이언트 전용)
+// SHA-256 해시
 async function hashPassword(pw){
   const encoder = new TextEncoder();
   const data = encoder.encode(pw + '_golf_salt_2024');
   const hash = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// 임시 비밀번호 생성
+function generateTempPw(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pw = '';
+  for(let i = 0; i < 8; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+  return pw;
 }
 
 // 기존 데이터 마이그레이션
@@ -566,18 +639,28 @@ function hideAuthScreen(){ document.getElementById('authScreen').style.display =
 function showLogin(){
   document.getElementById('loginForm').style.display = 'block';
   document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('forgotPwForm').style.display = 'none';
   document.getElementById('loginError').style.display = 'none';
-  document.getElementById('loginId').value = '';
+  document.getElementById('loginEmail').value = '';
   document.getElementById('loginPw').value = '';
 }
 function showRegister(){
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('forgotPwForm').style.display = 'none';
   document.getElementById('registerError').style.display = 'none';
   document.getElementById('regName').value = '';
-  document.getElementById('regId').value = '';
+  document.getElementById('regEmail').value = '';
   document.getElementById('regPw').value = '';
   document.getElementById('regPw2').value = '';
+}
+function showForgotPw(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('forgotPwForm').style.display = 'block';
+  document.getElementById('forgotError').style.display = 'none';
+  document.getElementById('forgotSuccess').style.display = 'none';
+  document.getElementById('forgotEmail').value = '';
 }
 
 function showAuthError(formId, msg){
@@ -585,25 +668,32 @@ function showAuthError(formId, msg){
   el.textContent = msg;
   el.style.display = 'block';
 }
+function showAuthSuccess(formId, msg){
+  const el = document.getElementById(formId);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
 
 // ── 회원가입 ──
 async function doRegister(){
-  const name = document.getElementById('regName').value.trim();
-  const uid  = document.getElementById('regId').value.trim();
-  const pw   = document.getElementById('regPw').value;
-  const pw2  = document.getElementById('regPw2').value;
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pw    = document.getElementById('regPw').value;
+  const pw2   = document.getElementById('regPw2').value;
 
   if(!name) return showAuthError('registerError','이름을 입력해주세요.');
-  if(!uid || uid.length < 4) return showAuthError('registerError','아이디는 4자 이상 입력해주세요.');
-  if(!/^[a-zA-Z0-9_]+$/.test(uid)) return showAuthError('registerError','아이디는 영문, 숫자, _만 사용 가능합니다.');
+  if(!email) return showAuthError('registerError','이메일을 입력해주세요.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAuthError('registerError','올바른 이메일 형식이 아닙니다.');
   if(!pw || pw.length < 4) return showAuthError('registerError','비밀번호는 4자 이상 입력해주세요.');
   if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
-  if(userList.some(u => u.uid === uid)) return showAuthError('registerError','이미 사용 중인 아이디입니다.');
+  if(userList.some(u => u.email === email)) return showAuthError('registerError','이미 가입된 이메일입니다.');
 
   const id = 'u' + Date.now();
   const created = new Date().toISOString().slice(0,10);
   const pwHash = await hashPassword(pw);
-  userList.push({ id, uid, name, pwHash, created });
+  // 첫 번째 사용자는 관리자
+  const role = userList.length === 0 ? 'admin' : 'user';
+  userList.push({ id, email, name, pwHash, role, created });
   saveUserList();
 
   // 첫 번째 사용자에게 기존 데이터 마이그레이션
@@ -622,14 +712,14 @@ async function doRegister(){
 
 // ── 로그인 ──
 async function doLogin(){
-  const uid = document.getElementById('loginId').value.trim();
-  const pw  = document.getElementById('loginPw').value;
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pw    = document.getElementById('loginPw').value;
 
-  if(!uid || !pw) return showAuthError('loginError','아이디와 비밀번호를 입력해주세요.');
+  if(!email || !pw) return showAuthError('loginError','이메일과 비밀번호를 입력해주세요.');
 
   const pwHash = await hashPassword(pw);
-  const user = userList.find(u => u.uid === uid && u.pwHash === pwHash);
-  if(!user) return showAuthError('loginError','아이디 또는 비밀번호가 올바르지 않습니다.');
+  const user = userList.find(u => u.email === email && u.pwHash === pwHash);
+  if(!user) return showAuthError('loginError','이메일 또는 비밀번호가 올바르지 않습니다.');
 
   loginAs(user.id);
 }
@@ -643,10 +733,46 @@ function loginAs(id){
   renderAll();
 }
 
+// ── 비밀번호 찾기 ──
+async function doForgotPw(){
+  const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+  document.getElementById('forgotError').style.display = 'none';
+  document.getElementById('forgotSuccess').style.display = 'none';
+
+  if(!email) return showAuthError('forgotError','이메일을 입력해주세요.');
+
+  const user = userList.find(u => u.email === email);
+  if(!user) return showAuthError('forgotError','등록되지 않은 이메일입니다.');
+
+  const tempPw = generateTempPw();
+  user.pwHash = await hashPassword(tempPw);
+  saveUserList();
+
+  // 이메일 발송 (mailto: 프로토콜)
+  const subject = encodeURIComponent('[골프캘린더] 임시 비밀번호 안내');
+  const body = encodeURIComponent(
+    `안녕하세요, ${user.name}님!\n\n` +
+    `골프 캘린더 임시 비밀번호를 안내드립니다.\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `임시 비밀번호: ${tempPw}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `로그인 후 반드시 비밀번호를 변경해주세요.\n\n` +
+    `- 골프 캘린더`
+  );
+  window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self');
+
+  showAuthSuccess('forgotSuccess',
+    `✅ 임시 비밀번호가 생성되었습니다.\n이메일 앱이 열리면 자신에게 발송해주세요.\n\n임시 비밀번호: ${tempPw}`
+  );
+  document.getElementById('forgotSuccess').style.whiteSpace = 'pre-line';
+}
+
 // ── 로그아웃 ──
 function doLogout(){
   currentUser = null;
   localStorage.removeItem('golf_current_user');
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('mainCal').style.display = 'block';
   showAuthScreen();
   showLogin();
 }
@@ -656,15 +782,117 @@ function renderHeaderUser(){
   const u = userList.find(x => x.id === currentUser);
   const el = document.getElementById('hdUser');
   if(u){
-    el.innerHTML = `<div class="hd-user-left" onclick="doLogout()">
+    const adminBtn = u.role === 'admin'
+      ? `<button class="hd-admin-btn" onclick="goAdmin()">👑 관리</button>` : '';
+    el.innerHTML = `<div class="hd-user-left">
       <div class="hd-user-avatar">${u.name.charAt(0)}</div>
       <span class="hd-user-name">${u.name}</span>
+      <span class="hd-user-email">${u.email}</span>
     </div>
-    <button class="hd-logout-btn" onclick="doLogout()">로그아웃</button>`;
+    <div class="hd-btns-right">
+      ${adminBtn}
+      <button class="hd-logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>`;
     el.style.display = 'flex';
   } else {
     el.style.display = 'none';
   }
+}
+
+// ═══════════════════════════════════════
+// 관리자 패널
+// ═══════════════════════════════════════
+function goAdmin(){
+  if(!isAdmin()){ alert('관리자 권한이 없습니다.'); return; }
+  document.getElementById('mainCal').style.display = 'none';
+  document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  ['nb-cal','nb-list','nb-stats','nb-manage'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  renderAdminPanel();
+}
+
+function renderAdminPanel(){
+  const totalUsers = userList.length;
+  const totalSchedules = userList.reduce((sum, u) => {
+    return sum + JSON.parse(localStorage.getItem(`golf_${u.id}_schedules`) || '[]').length;
+  }, 0);
+  const adminCount = userList.filter(u => u.role === 'admin').length;
+
+  document.getElementById('adminStats').innerHTML = [
+    { val: totalUsers, label: '전체 사용자' },
+    { val: adminCount, label: '관리자' },
+    { val: totalUsers - adminCount, label: '일반 사용자' },
+    { val: totalSchedules, label: '전체 일정' },
+  ].map(s => `<div class="admin-stat">
+    <div class="admin-stat-val">${s.val}</div>
+    <div class="admin-stat-label">${s.label}</div>
+  </div>`).join('');
+
+  document.getElementById('adminUserList').innerHTML = userList.map((u, i) => {
+    const scheCount = JSON.parse(localStorage.getItem(`golf_${u.id}_schedules`) || '[]').length;
+    const isSelf = u.id === currentUser;
+    const badge = u.role === 'admin' ? '<span class="admin-badge">관리자</span>' : '';
+    const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole(${i})">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
+    const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser(${i})">삭제</button>` : '';
+    return `<div class="admin-user-card">
+      <div class="admin-user-top">
+        <div class="admin-user-avatar">${u.name.charAt(0)}</div>
+        <div class="admin-user-info">
+          <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
+          <div class="admin-user-detail">${u.email} · 가입: ${u.created} · 일정 ${scheCount}건</div>
+        </div>
+      </div>
+      <div class="admin-user-btns">
+        <button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw(${i})">비밀번호 초기화</button>
+        ${roleBtn}
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function adminResetPw(idx){
+  const u = userList[idx];
+  const tempPw = generateTempPw();
+  if(!confirm(`"${u.name}" (${u.email})의 비밀번호를 초기화하시겠습니까?`)) return;
+
+  u.pwHash = await hashPassword(tempPw);
+  saveUserList();
+
+  // 이메일 발송
+  const subject = encodeURIComponent('[골프캘린더] 비밀번호 초기화 안내');
+  const body = encodeURIComponent(
+    `안녕하세요, ${u.name}님!\n\n` +
+    `관리자에 의해 비밀번호가 초기화되었습니다.\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `임시 비밀번호: ${tempPw}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `로그인 후 반드시 비밀번호를 변경해주세요.\n\n` +
+    `- 골프 캘린더 관리자`
+  );
+  window.open(`mailto:${u.email}?subject=${subject}&body=${body}`, '_blank');
+
+  alert(`✅ 비밀번호가 초기화되었습니다.\n\n임시 비밀번호: ${tempPw}\n\n이메일 앱에서 사용자에게 발송해주세요.`);
+}
+
+function toggleRole(idx){
+  const u = userList[idx];
+  const newRole = u.role === 'admin' ? 'user' : 'admin';
+  if(!confirm(`"${u.name}"을(를) ${newRole === 'admin' ? '관리자' : '일반 사용자'}로 변경하시겠습니까?`)) return;
+  u.role = newRole;
+  saveUserList();
+  renderAdminPanel();
+}
+
+function adminDeleteUser(idx){
+  const u = userList[idx];
+  if(!confirm(`⚠️ "${u.name}" (${u.email}) 사용자를 삭제하시겠습니까?\n모든 일정 데이터가 삭제됩니다.`)) return;
+  localStorage.removeItem(`golf_${u.id}_schedules`);
+  localStorage.removeItem(`golf_${u.id}_courses`);
+  localStorage.removeItem(`golf_${u.id}_alarms`);
+  userList.splice(idx, 1);
+  saveUserList();
+  renderAdminPanel();
 }
 
 // ═══════════════════════════════════════
@@ -732,11 +960,13 @@ function closeModal(id){ document.getElementById(id).style.display='none'; }
 function goCalendar(){
   document.getElementById('mainCal').style.display = 'block';
   document.getElementById('mainManage').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('nb-manage').classList.remove('active');
 }
 function goManage(){
   document.getElementById('mainCal').style.display = 'none';
   document.getElementById('mainManage').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
   ['nb-cal','nb-list','nb-stats'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   document.getElementById('nb-manage').classList.add('active');
   renderManage();
