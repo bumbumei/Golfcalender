@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a4731">
 <title>⛳ 골프 캘린더</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --gd:#1a4731;--g:#2d6a4f;--gm:#40916c;--gp:#d8f3dc;
@@ -273,7 +277,7 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
     <!-- 로그인 폼 -->
     <div id="loginForm">
       <div class="auth-box-sub">로그인하여 내 골프 일정을 관리하세요</div>
-      <div id="migrateNotice" class="auth-migrate" style="display:none;">📦 기존 일정 데이터가 발견되었습니다.<br>회원가입 후 자동으로 가져옵니다.</div>
+      <div id="migrateNotice" class="auth-migrate" style="display:none;"></div>
       <div class="auth-error" id="loginError"></div>
       <div class="auth-form">
         <div class="auth-field">
@@ -330,7 +334,7 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
           <label class="auth-label">이메일</label>
           <input class="auth-input" id="forgotEmail" type="email" placeholder="example@email.com" onkeydown="if(event.key==='Enter')doForgotPw()">
         </div>
-        <button class="auth-btn" onclick="doForgotPw()">임시 비밀번호 발송</button>
+        <button class="auth-btn" onclick="doForgotPw()">비밀번호 재설정 이메일 발송</button>
       </div>
       <div class="auth-links">
         <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
@@ -588,51 +592,32 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 
 <script>
 // ═══════════════════════════════════════
-// 사용자 인증 (이메일 로그인/회원가입)
+// Firebase 초기화
 // ═══════════════════════════════════════
-const ADMIN_EMAIL = 'admin@golf.com'; // 관리자 기본 이메일
-let userList = JSON.parse(localStorage.getItem('golf_users') || '[]');
-let currentUser = localStorage.getItem('golf_current_user') || null;
+const firebaseConfig = {
+  apiKey: "AIzaSyAbb92J3XlscMDVINEzjlaX5KXpzStunFE",
+  authDomain: "golf-calendar-14e5d.firebaseapp.com",
+  projectId: "golf-calendar-14e5d",
+  storageBucket: "golf-calendar-14e5d.firebasestorage.app",
+  messagingSenderId: "737974330226",
+  appId: "1:737974330226:web:cfa9d623d90b4b8291f3eb"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function getUserKey(key){ return `golf_${currentUser}_${key}`; }
-function saveUserList(){ localStorage.setItem('golf_users', JSON.stringify(userList)); }
-function isAdmin(){ const u = userList.find(x => x.id === currentUser); return u && u.role === 'admin'; }
+// ═══════════════════════════════════════
+// 사용자 인증 (Firebase Auth)
+// ═══════════════════════════════════════
+let currentUser = null;     // Firebase user object
+let currentUserData = null; // Firestore user profile
+let allUsers = [];          // 관리자용 전체 사용자 목록
 
-// SHA-256 해시
-async function hashPassword(pw){
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pw + '_golf_salt_2024');
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-// 임시 비밀번호 생성
-function generateTempPw(){
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let pw = '';
-  for(let i = 0; i < 8; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
-  return pw;
-}
-
-// 기존 데이터 마이그레이션
-function migrateOldData(){
-  const oldSchedules = localStorage.getItem('golf_schedules');
-  const oldCourses = localStorage.getItem('golf_courses');
-  const oldAlarms = localStorage.getItem('golf_confirmed_alarms');
-  if(oldSchedules || oldCourses) return { schedules: oldSchedules, courses: oldCourses, alarms: oldAlarms };
-  return null;
-}
-function clearOldData(){
-  localStorage.removeItem('golf_schedules');
-  localStorage.removeItem('golf_courses');
-  localStorage.removeItem('golf_confirmed_alarms');
-}
+function isAdmin(){ return currentUserData && currentUserData.role === 'admin'; }
 
 // ── 화면 전환 ──
 function showAuthScreen(){
   document.getElementById('authScreen').style.display = 'flex';
-  const hasOld = localStorage.getItem('golf_schedules') || localStorage.getItem('golf_courses');
-  document.getElementById('migrateNotice').style.display = hasOld ? 'block' : 'none';
 }
 function hideAuthScreen(){ document.getElementById('authScreen').style.display = 'none'; }
 
@@ -674,7 +659,22 @@ function showAuthSuccess(formId, msg){
   el.style.display = 'block';
 }
 
-// ── 회원가입 ──
+// Firebase 에러 메시지 한글화
+function firebaseErrorMsg(code){
+  const map = {
+    'auth/email-already-in-use': '이미 가입된 이메일입니다.',
+    'auth/invalid-email': '올바른 이메일 형식이 아닙니다.',
+    'auth/weak-password': '비밀번호는 6자 이상 입력해주세요.',
+    'auth/user-not-found': '등록되지 않은 이메일입니다.',
+    'auth/wrong-password': '비밀번호가 올바르지 않습니다.',
+    'auth/invalid-credential': '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'auth/too-many-requests': '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요.',
+    'auth/network-request-failed': '네트워크 오류입니다. 인터넷 연결을 확인해주세요.',
+  };
+  return map[code] || '오류가 발생했습니다. 다시 시도해주세요.';
+}
+
+// ── 회원가입 (Firebase Auth + Firestore) ──
 async function doRegister(){
   const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim().toLowerCase();
@@ -683,60 +683,44 @@ async function doRegister(){
 
   if(!name) return showAuthError('registerError','이름을 입력해주세요.');
   if(!email) return showAuthError('registerError','이메일을 입력해주세요.');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAuthError('registerError','올바른 이메일 형식이 아닙니다.');
-  if(!pw || pw.length < 4) return showAuthError('registerError','비밀번호는 4자 이상 입력해주세요.');
+  if(!pw || pw.length < 6) return showAuthError('registerError','비밀번호는 6자 이상 입력해주세요.');
   if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
-  if(userList.some(u => u.email === email)) return showAuthError('registerError','이미 가입된 이메일입니다.');
 
-  const id = 'u' + Date.now();
-  const created = new Date().toISOString().slice(0,10);
-  const pwHash = await hashPassword(pw);
-  // 첫 번째 사용자는 관리자
-  const role = userList.length === 0 ? 'admin' : 'user';
-  userList.push({ id, email, name, pwHash, role, created });
-  saveUserList();
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pw);
+    await cred.user.updateProfile({ displayName: name });
 
-  // 첫 번째 사용자에게 기존 데이터 마이그레이션
-  if(userList.length === 1){
-    const old = migrateOldData();
-    if(old){
-      if(old.schedules) localStorage.setItem(`golf_${id}_schedules`, old.schedules);
-      if(old.courses) localStorage.setItem(`golf_${id}_courses`, old.courses);
-      if(old.alarms) localStorage.setItem(`golf_${id}_alarms`, old.alarms);
-      clearOldData();
-    }
+    // Firestore에 사용자 프로필 저장
+    // 첫 번째 사용자는 관리자
+    const usersSnap = await db.collection('users').get();
+    const role = usersSnap.empty ? 'admin' : 'user';
+
+    await db.collection('users').doc(cred.user.uid).set({
+      email, name, role,
+      created: new Date().toISOString().slice(0,10)
+    });
+    // onAuthStateChanged에서 자동 로그인 처리됨
+  } catch(e){
+    showAuthError('registerError', firebaseErrorMsg(e.code));
   }
-
-  loginAs(id);
 }
 
-// ── 로그인 ──
+// ── 로그인 (Firebase Auth) ──
 async function doLogin(){
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pw    = document.getElementById('loginPw').value;
 
   if(!email || !pw) return showAuthError('loginError','이메일과 비밀번호를 입력해주세요.');
 
-  const pwHash = await hashPassword(pw);
-  const user = userList.find(u => u.email === email && u.pwHash === pwHash);
-  if(!user) return showAuthError('loginError','이메일 또는 비밀번호가 올바르지 않습니다.');
-
-  loginAs(user.id);
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    // onAuthStateChanged에서 자동 처리
+  } catch(e){
+    showAuthError('loginError', firebaseErrorMsg(e.code));
+  }
 }
 
-function loginAs(id){
-  currentUser = id;
-  localStorage.setItem('golf_current_user', id);
-  loadUserData();
-  hideAuthScreen();
-  document.getElementById('mainCal').style.display = 'block';
-  document.getElementById('mainManage').style.display = 'none';
-  document.getElementById('adminPanel').style.display = 'none';
-  renderHeaderUser();
-  renderAll();
-}
-
-// ── 비밀번호 찾기 ──
+// ── 비밀번호 찾기 (Firebase 이메일 발송) ──
 async function doForgotPw(){
   const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
   document.getElementById('forgotError').style.display = 'none';
@@ -744,47 +728,66 @@ async function doForgotPw(){
 
   if(!email) return showAuthError('forgotError','이메일을 입력해주세요.');
 
-  const user = userList.find(u => u.email === email);
-  if(!user) return showAuthError('forgotError','등록되지 않은 이메일입니다.');
-
-  const tempPw = generateTempPw();
-  user.pwHash = await hashPassword(tempPw);
-  saveUserList();
-
-  // 이메일 발송 (mailto: 프로토콜)
-  const subject = encodeURIComponent('[골프캘린더] 임시 비밀번호 안내');
-  const body = encodeURIComponent(
-    `안녕하세요, ${user.name}님!\n\n` +
-    `골프 캘린더 임시 비밀번호를 안내드립니다.\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `임시 비밀번호: ${tempPw}\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `로그인 후 반드시 비밀번호를 변경해주세요.\n\n` +
-    `- 골프 캘린더`
-  );
-  window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self');
-
-  showAuthSuccess('forgotSuccess',
-    `✅ 임시 비밀번호가 생성되었습니다.\n이메일 앱이 열리면 자신에게 발송해주세요.\n\n임시 비밀번호: ${tempPw}`
-  );
-  document.getElementById('forgotSuccess').style.whiteSpace = 'pre-line';
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showAuthSuccess('forgotSuccess',
+      `✅ 비밀번호 재설정 이메일을 발송했습니다.\n이메일 수신함을 확인해주세요.`
+    );
+    document.getElementById('forgotSuccess').style.whiteSpace = 'pre-line';
+  } catch(e){
+    showAuthError('forgotError', firebaseErrorMsg(e.code));
+  }
 }
 
 // ── 로그아웃 ──
 function doLogout(){
   if(!confirm('로그아웃 하시겠습니까?')) return;
-  currentUser = null;
-  localStorage.removeItem('golf_current_user');
-  const ap = document.getElementById('adminPanel'); if(ap) ap.style.display = 'none';
-  const mc = document.getElementById('mainCal'); if(mc) mc.style.display = 'none';
-  const mm = document.getElementById('mainManage'); if(mm) mm.style.display = 'none';
-  showAuthScreen();
-  showLogin();
+  auth.signOut();
+  // onAuthStateChanged에서 자동 처리
 }
+
+// ── Firebase Auth 상태 감지 ──
+auth.onAuthStateChanged(async (user) => {
+  if(user){
+    currentUser = user;
+    // Firestore에서 사용자 프로필 가져오기
+    const doc = await db.collection('users').doc(user.uid).get();
+    if(doc.exists){
+      currentUserData = { id: user.uid, ...doc.data() };
+    } else {
+      // Firestore에 프로필이 없으면 생성
+      const usersSnap = await db.collection('users').get();
+      const role = usersSnap.size <= 1 ? 'admin' : 'user';
+      const profile = {
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+        role,
+        created: new Date().toISOString().slice(0,10)
+      };
+      await db.collection('users').doc(user.uid).set(profile);
+      currentUserData = { id: user.uid, ...profile };
+    }
+    await loadUserData();
+    hideAuthScreen();
+    document.getElementById('mainCal').style.display = 'block';
+    document.getElementById('mainManage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none';
+    renderHeaderUser();
+    renderAll();
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('mainCal').style.display = 'none';
+    document.getElementById('mainManage').style.display = 'none';
+    showAuthScreen();
+    showLogin();
+  }
+});
 
 // ── 헤더 표시 ──
 function renderHeaderUser(){
-  const u = userList.find(x => x.id === currentUser);
+  const u = currentUserData;
   const el = document.getElementById('hdUser');
   if(u){
     const adminBtn = u.role === 'admin'
@@ -805,23 +808,33 @@ function renderHeaderUser(){
 }
 
 // ═══════════════════════════════════════
-// 관리자 패널
+// 관리자 패널 (Firestore 기반)
 // ═══════════════════════════════════════
-function goAdmin(){
+async function goAdmin(){
   if(!isAdmin()){ alert('관리자 권한이 없습니다.'); return; }
   document.getElementById('mainCal').style.display = 'none';
   document.getElementById('mainManage').style.display = 'none';
   document.getElementById('adminPanel').style.display = 'block';
   ['nb-cal','nb-list','nb-stats','nb-manage'].forEach(id => document.getElementById(id)?.classList.remove('active'));
-  renderAdminPanel();
+  await renderAdminPanel();
 }
 
-function renderAdminPanel(){
-  const totalUsers = userList.length;
-  const totalSchedules = userList.reduce((sum, u) => {
-    return sum + JSON.parse(localStorage.getItem(`golf_${u.id}_schedules`) || '[]').length;
-  }, 0);
-  const adminCount = userList.filter(u => u.role === 'admin').length;
+async function renderAdminPanel(){
+  // Firestore에서 전체 사용자 목록 가져오기
+  const snap = await db.collection('users').get();
+  allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const totalUsers = allUsers.length;
+  const adminCount = allUsers.filter(u => u.role === 'admin').length;
+
+  // 각 사용자의 일정 수 가져오기
+  let totalSchedules = 0;
+  const userScheduleCounts = {};
+  for(const u of allUsers){
+    const scheSnap = await db.collection('users').doc(u.id).collection('schedules').get();
+    userScheduleCounts[u.id] = scheSnap.size;
+    totalSchedules += scheSnap.size;
+  }
 
   document.getElementById('adminStats').innerHTML = [
     { val: totalUsers, label: '전체 사용자' },
@@ -833,22 +846,23 @@ function renderAdminPanel(){
     <div class="admin-stat-label">${s.label}</div>
   </div>`).join('');
 
-  document.getElementById('adminUserList').innerHTML = userList.map((u, i) => {
-    const scheCount = JSON.parse(localStorage.getItem(`golf_${u.id}_schedules`) || '[]').length;
-    const isSelf = u.id === currentUser;
+  document.getElementById('adminUserList').innerHTML = allUsers.map((u) => {
+    const scheCount = userScheduleCounts[u.id] || 0;
+    const isSelf = u.id === currentUser.uid;
     const badge = u.role === 'admin' ? '<span class="admin-badge">관리자</span>' : '';
-    const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole(${i})">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
-    const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser(${i})">삭제</button>` : '';
+    const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole('${u.id}')">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
+    const resetBtn = `<button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw('${u.id}','${u.email}','${u.name}')">비밀번호 초기화</button>`;
+    const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser('${u.id}','${u.name}','${u.email}')">삭제</button>` : '';
     return `<div class="admin-user-card">
       <div class="admin-user-top">
         <div class="admin-user-avatar">${u.name.charAt(0)}</div>
         <div class="admin-user-info">
           <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
-          <div class="admin-user-detail">${u.email} · 가입: ${u.created} · 일정 ${scheCount}건</div>
+          <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 일정 ${scheCount}건</div>
         </div>
       </div>
       <div class="admin-user-btns">
-        <button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw(${i})">비밀번호 초기화</button>
+        ${resetBtn}
         ${roleBtn}
         ${delBtn}
       </div>
@@ -856,52 +870,41 @@ function renderAdminPanel(){
   }).join('');
 }
 
-async function adminResetPw(idx){
-  const u = userList[idx];
-  const tempPw = generateTempPw();
-  if(!confirm(`"${u.name}" (${u.email})의 비밀번호를 초기화하시겠습니까?`)) return;
-
-  u.pwHash = await hashPassword(tempPw);
-  saveUserList();
-
-  // 이메일 발송
-  const subject = encodeURIComponent('[골프캘린더] 비밀번호 초기화 안내');
-  const body = encodeURIComponent(
-    `안녕하세요, ${u.name}님!\n\n` +
-    `관리자에 의해 비밀번호가 초기화되었습니다.\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `임시 비밀번호: ${tempPw}\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `로그인 후 반드시 비밀번호를 변경해주세요.\n\n` +
-    `- 골프 캘린더 관리자`
-  );
-  window.open(`mailto:${u.email}?subject=${subject}&body=${body}`, '_blank');
-
-  alert(`✅ 비밀번호가 초기화되었습니다.\n\n임시 비밀번호: ${tempPw}\n\n이메일 앱에서 사용자에게 발송해주세요.`);
+async function adminResetPw(uid, email, name){
+  if(!confirm(`"${name}" (${email})에게 비밀번호 재설정 이메일을 발송하시겠습니까?`)) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    alert(`✅ ${email}로 비밀번호 재설정 이메일을 발송했습니다.`);
+  } catch(e){
+    alert('이메일 발송 중 오류가 발생했습니다: ' + firebaseErrorMsg(e.code));
+  }
 }
 
-function toggleRole(idx){
-  const u = userList[idx];
+async function toggleRole(uid){
+  const u = allUsers.find(x => x.id === uid);
+  if(!u) return;
   const newRole = u.role === 'admin' ? 'user' : 'admin';
   if(!confirm(`"${u.name}"을(를) ${newRole === 'admin' ? '관리자' : '일반 사용자'}로 변경하시겠습니까?`)) return;
-  u.role = newRole;
-  saveUserList();
-  renderAdminPanel();
+  await db.collection('users').doc(uid).update({ role: newRole });
+  await renderAdminPanel();
 }
 
-function adminDeleteUser(idx){
-  const u = userList[idx];
-  if(!confirm(`⚠️ "${u.name}" (${u.email}) 사용자를 삭제하시겠습니까?\n모든 일정 데이터가 삭제됩니다.`)) return;
-  localStorage.removeItem(`golf_${u.id}_schedules`);
-  localStorage.removeItem(`golf_${u.id}_courses`);
-  localStorage.removeItem(`golf_${u.id}_alarms`);
-  userList.splice(idx, 1);
-  saveUserList();
-  renderAdminPanel();
+async function adminDeleteUser(uid, name, email){
+  if(!confirm(`⚠️ "${name}" (${email}) 사용자를 삭제하시겠습니까?\n모든 일정 데이터가 삭제됩니다.`)) return;
+  // Firestore 하위 컬렉션 삭제
+  const subcols = ['schedules','courses','alarms'];
+  for(const col of subcols){
+    const snap = await db.collection('users').doc(uid).collection(col).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  await db.collection('users').doc(uid).delete();
+  await renderAdminPanel();
 }
 
 // ═══════════════════════════════════════
-// 데이터 & 상태
+// 데이터 & 상태 (Firestore)
 // ═══════════════════════════════════════
 const DEFAULT_COURSES = ['아시아나','렉스필드','태광','설해원'];
 
@@ -909,10 +912,21 @@ let courses   = [];
 let schedules = [];
 let confirmedAlarms = [];
 
-function loadUserData(){
-  courses = JSON.parse(localStorage.getItem(getUserKey('courses')) || 'null') || [...DEFAULT_COURSES];
-  schedules = JSON.parse(localStorage.getItem(getUserKey('schedules')) || '[]');
-  confirmedAlarms = JSON.parse(localStorage.getItem(getUserKey('alarms')) || '[]');
+async function loadUserData(){
+  if(!currentUser) return;
+  const uid = currentUser.uid;
+
+  // courses 로드
+  const coursesDoc = await db.collection('users').doc(uid).collection('settings').doc('courses').get();
+  courses = coursesDoc.exists ? coursesDoc.data().list : [...DEFAULT_COURSES];
+
+  // schedules 로드
+  const scheSnap = await db.collection('users').doc(uid).collection('schedules').get();
+  schedules = scheSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // alarms 로드
+  const alarmsDoc = await db.collection('users').doc(uid).collection('settings').doc('alarms').get();
+  confirmedAlarms = alarmsDoc.exists ? alarmsDoc.data().list : [];
 }
 
 // 폼 상태
@@ -950,12 +964,11 @@ function toDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padSt
 function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
 function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('ko-KR').format(n)+'원'; }
 function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
-function nextId(){ return schedules.length ? Math.max(...schedules.map(s=>s.id))+1 : 1; }
-function saveData(){
+async function saveData(){
   if(!currentUser) return;
-  localStorage.setItem(getUserKey('courses'),   JSON.stringify(courses));
-  localStorage.setItem(getUserKey('schedules'), JSON.stringify(schedules));
-  localStorage.setItem(getUserKey('alarms'), JSON.stringify(confirmedAlarms));
+  const uid = currentUser.uid;
+  await db.collection('users').doc(uid).collection('settings').doc('courses').set({ list: courses });
+  await db.collection('users').doc(uid).collection('settings').doc('alarms').set({ list: confirmedAlarms });
 }
 function closeModal(id){ document.getElementById(id).style.display='none'; }
 
@@ -1066,8 +1079,8 @@ function scheCard(s){
     </div>
     ${costDetail}${photoHtml}${memoHtml}
     <div class="sche-btns">
-      <button class="btn-edit" onclick="openEdit(${s.id})">✏️ 수정</button>
-      <button class="btn-del"  onclick="delSchedule(${s.id})">🗑️ 삭제</button>
+      <button class="btn-edit" onclick="openEdit('${s.id}')">✏️ 수정</button>
+      <button class="btn-del"  onclick="delSchedule('${s.id}')">🗑️ 삭제</button>
     </div>
   </div>`;
 }
@@ -1242,13 +1255,13 @@ function renderAlarm(){
     const compStr=(s.companions||[]).join(', ')||'미정';
     return`<div class="alarm-item">
       <div class="alarm-dday">${icon}<span>${lbl}</span></div>
-      <div class="alarm-info" onclick="openEdit(${s.id})">
+      <div class="alarm-info" onclick="openEdit('${s.id}')">
         <div class="alarm-course-txt">${courseStr}</div>
         <div class="alarm-date-txt">${fmtDate(s.date)}${s.time?' · '+s.time:''}　👥 ${compStr}</div>
       </div>
       <div class="alarm-btns">
-        <button class="btn-alarm-ok"     onclick="okAlarm(${s.id})">✅ 확인</button>
-        <button class="btn-alarm-cancel" onclick="cancelReserve(${s.id})">예약취소</button>
+        <button class="btn-alarm-ok"     onclick="okAlarm('${s.id}')">✅ 확인</button>
+        <button class="btn-alarm-cancel" onclick="cancelReserve('${s.id}')">예약취소</button>
       </div>
     </div>`;
   }).join('');
@@ -1270,15 +1283,16 @@ function toggleAlarm(){
   if(b) b.style.maxHeight=alarmFolded?'0':'2000px';
   renderAlarm();
 }
-function okAlarm(id){
+async function okAlarm(id){
   if(!confirmedAlarms.includes(id)) confirmedAlarms.push(id);
-  saveData(); renderAlarm();
+  await saveData(); renderAlarm();
 }
-function cancelReserve(id){
+async function cancelReserve(id){
   const s=schedules.find(x=>x.id===id); if(!s) return;
   if(confirm(`⚠️ 예약 취소\n\n골프장: ${(s.courses||[]).join(', ')||'미정'}\n날짜: ${fmtDate(s.date)}\n\n이 일정을 취소(삭제)하시겠습니까?`)){
+    await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
     schedules=schedules.filter(x=>x.id!==id);
-    saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
+    await saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
   }
 }
 function reqNotif(){
@@ -1303,15 +1317,15 @@ function renderManage(){
       <button class="btn-del-course" onclick="delCourse(${i})">삭제</button>
     </div>`).join('');
 }
-function addCourse(){
+async function addCourse(){
   const name=document.getElementById('newCourse').value.trim();
   if(!name) return;
   if(courses.includes(name)){ alert('이미 있는 골프장입니다.'); return; }
-  courses.push(name); saveData(); document.getElementById('newCourse').value=''; renderManage();
+  courses.push(name); await saveData(); document.getElementById('newCourse').value=''; renderManage();
 }
-function delCourse(i){
+async function delCourse(i){
   if(!confirm(`"${courses[i]}" 골프장을 삭제하시겠습니까?`)) return;
-  courses.splice(i,1); saveData(); renderManage();
+  courses.splice(i,1); await saveData(); renderManage();
 }
 
 // ═══════════════════════════════════════
@@ -1338,19 +1352,21 @@ function renderDiComps(){
   wrap.innerHTML=tags+inp;
 }
 function removeDiComp(i){ diComps.splice(i,1); renderDiComps(); }
-function saveDirect(){
+async function saveDirect(){
   const date=document.getElementById('di-date').value;
   const name=document.getElementById('di-course').value.trim();
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!name){ alert('골프장명을 입력해주세요.'); return; }
   if(!courses.includes(name)){ courses.push(name); }
-  schedules.push({
-    id:nextId(), date, time:document.getElementById('di-time').value,
+  const obj={
+    date, time:document.getElementById('di-time').value,
     type:diType, courses:[name], companions:[...diComps],
     green:0,cart:0,caddy:0,other:0,
     memo:document.getElementById('di-memo').value.trim(), photos:[],
-  });
-  saveData();
+  };
+  const docRef = await db.collection('users').doc(currentUser.uid).collection('schedules').add(obj);
+  schedules.push({...obj, id: docRef.id});
+  await saveData();
   // 초기화
   document.getElementById('di-date').value=toDateStr(today);
   document.getElementById('di-course').value='';
@@ -1411,7 +1427,7 @@ function openEdit(id){
   renderPhotoArea();
   document.getElementById('formModal').style.display='flex';
 }
-function saveSchedule(){
+async function saveSchedule(){
   const date=document.getElementById('f-date').value;
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!formCourses.length){ alert('골프장을 선택하거나 직접 입력해주세요.'); return; }
@@ -1425,15 +1441,22 @@ function saveSchedule(){
     memo:document.getElementById('f-memo').value.trim(),
     photos:[...formPhotos],
   };
-  if(editId) schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
-  else schedules.push({...obj,id:nextId()});
+  const uid = currentUser.uid;
+  if(editId){
+    await db.collection('users').doc(uid).collection('schedules').doc(editId).update(obj);
+    schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
+  } else {
+    const docRef = await db.collection('users').doc(uid).collection('schedules').add(obj);
+    schedules.push({...obj, id: docRef.id});
+  }
   // 직접입력 골프장 자동 등록
   formCourses.forEach(c=>{ if(!courses.includes(c)) courses.push(c); });
-  saveData(); closeModal('formModal'); renderAll();
+  await saveData(); closeModal('formModal'); renderAll();
 }
-function delSchedule(id){
+async function delSchedule(id){
   if(!confirm('일정을 삭제하시겠습니까?')) return;
-  schedules=schedules.filter(s=>s.id!==id); saveData(); renderAll();
+  await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
+  schedules=schedules.filter(s=>s.id!==id); await saveData(); renderAll();
 }
 
 // ── 일정 유형 선택 ──
@@ -1558,24 +1581,9 @@ function renderAll(){
 document.getElementById('f-date').value   = toDateStr(today);
 document.getElementById('di-date').value  = toDateStr(today);
 
-// 사용자 확인 후 앱 시작
-(function init(){
-  if(currentUser && userList.some(u => u.id === currentUser)){
-    // 로그인 세션 유지
-    loadUserData();
-    renderHeaderUser();
-    renderAll();
-  } else {
-    // 로그인 필요
-    currentUser = null;
-    localStorage.removeItem('golf_current_user');
-    showAuthScreen();
-    // 기존 데이터 있으면 회원가입 유도
-    const hasOld = localStorage.getItem('golf_schedules') || localStorage.getItem('golf_courses');
-    if(hasOld && !userList.length) showRegister();
-    else showLogin();
-  }
-})();
+// Firebase onAuthStateChanged에서 초기화 자동 처리
+// 로딩 중 auth screen 표시
+showAuthScreen();
 
 if('Notification' in window && Notification.permission==='granted') pushNotifs();
 </script>
