@@ -449,6 +449,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
       <input class="finput" type="text" id="di-course" placeholder="예: 파인비치 CC, 제주 오라 CC">
     </div>
     <div>
+      <div class="flabel">코스 이름 (예: 동코스, A코스)</div>
+      <input class="finput" type="text" id="di-courseName" placeholder="코스 이름 입력 (선택)">
+    </div>
+    <div>
       <div class="flabel">티오프 시간</div>
       <input class="finput" type="time" id="di-time">
     </div>
@@ -546,6 +550,11 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
           <button class="btn-direct-add" onclick="addDirectCourse()">＋ 추가</button>
         </div>
         <div class="direct-tags" id="directCourseTags"></div>
+      </div>
+
+      <div>
+        <div class="flabel">코스 이름 (예: 동코스, A코스)</div>
+        <input class="finput" type="text" id="f-courseName" placeholder="코스 이름 입력 (선택)">
       </div>
 
       <div>
@@ -1064,7 +1073,7 @@ function changeMonth(d){ calMonth+=d; if(calMonth<0){calMonth=11;calYear--;} if(
 function scheCard(s){
   const tl = s.type==='confirmed'?'🟢 동반자 확정':s.type==='open'?'🟡 동반자 미정':'🟣 예약 예정';
   const bc = s.type==='confirmed'?'bc':s.type==='open'?'bo':'bp';
-  const courseStr = (s.courses||[]).join(', ')||'미정';
+  const courseStr = ((s.courses||[]).join(', ')||'미정') + (s.courseName ? ` (${s.courseName})` : '');
   const compStr   = (s.companions||[]).length?(s.companions||[]).join(', '):'미정';
   const timeHtml  = s.time ? `<div class="sche-time">⏰ ${s.time} 티오프</div>` : '';
   const tc = totalCost(s);
@@ -1384,7 +1393,8 @@ async function saveDirect(){
   if(!courses.includes(name)){ courses.push(name); }
   const obj={
     date, time:document.getElementById('di-time').value,
-    type:diType, courses:[name], companions:[...diComps],
+    type:diType, courses:[name], courseName:document.getElementById('di-courseName').value.trim(),
+    companions:[...diComps],
     green:0,cart:0,caddy:0,other:0,
     memo:document.getElementById('di-memo').value.trim(), photos:[],
   };
@@ -1394,6 +1404,7 @@ async function saveDirect(){
   // 초기화
   document.getElementById('di-date').value=toDateStr(today);
   document.getElementById('di-course').value='';
+  document.getElementById('di-courseName').value='';
   document.getElementById('di-time').value='';
   document.getElementById('di-memo').value='';
   diComps=[]; selDiType('confirmed'); renderDiComps(); renderManage();
@@ -1415,6 +1426,7 @@ function resetForm(){
   document.getElementById('f-caddy').value='';
   document.getElementById('f-other').value='';
   document.getElementById('f-memo').value='';
+  document.getElementById('f-courseName').value='';
   document.getElementById('f-direct-course').value='';
   document.getElementById('compInputBtn').value='';
   selType('confirmed');
@@ -1446,6 +1458,7 @@ function openEdit(id){
   document.getElementById('f-caddy').value=s.caddy||'';
   document.getElementById('f-other').value=s.other||'';
   document.getElementById('f-memo').value=s.memo||'';
+  document.getElementById('f-courseName').value=s.courseName||'';
   document.getElementById('f-direct-course').value='';
   selType(formType);
   renderCompTags();
@@ -1459,7 +1472,8 @@ async function saveSchedule(){
   if(!formCourses.length){ alert('골프장을 선택하거나 직접 입력해주세요.'); return; }
   const obj={
     date, time:document.getElementById('f-time').value,
-    type:formType, courses:[...formCourses], companions:[...formComps],
+    type:formType, courses:[...formCourses], courseName:document.getElementById('f-courseName').value.trim(),
+    companions:[...formComps],
     green:Number(document.getElementById('f-green').value)||0,
     cart: Number(document.getElementById('f-cart').value)||0,
     caddy:Number(document.getElementById('f-caddy').value)||0,
@@ -1500,7 +1514,7 @@ function showToast(msg){
 
 // ── 초대 메시지 공유 ──
 function buildShareMessage(s){
-  const courseStr=(s.courses||[]).join(', ')||'미정';
+  const courseStr=((s.courses||[]).join(', ')||'미정')+(s.courseName?` (${s.courseName})`:'');
   const dateStr=fmtDate(s.date);
   const dayNames=['일','월','화','수','목','금','토'];
   const dayOfWeek=dayNames[new Date(s.date+'T00:00:00').getDay()];
