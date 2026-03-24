@@ -988,7 +988,13 @@ let curTab = 'cal';
 function toDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
 function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('ko-KR').format(n)+'원'; }
-function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
+function totalCost(s){
+  const green=Number(s.green)||0, cart=Number(s.cart)||0, caddy=Number(s.caddy)||0, other=Number(s.other)||0;
+  const ppl=(s.companions||[]).length+1;
+  const cartPP=cart>=100000?Math.round(cart/ppl):cart;
+  const caddyPP=caddy>=100000?Math.round(caddy/ppl):caddy;
+  return green+cartPP+caddyPP+other;
+}
 async function saveData(){
   if(!currentUser) return;
   const uid = currentUser.uid;
@@ -1080,10 +1086,14 @@ function scheCard(s){
 
   let costDetail='';
   if(s.green||s.cart||s.caddy||s.other){
+    const ppl=(s.companions||[]).length+1;
+    const cartVal=Number(s.cart)||0, caddyVal=Number(s.caddy)||0;
+    const cartPP=cartVal>=100000?Math.round(cartVal/ppl):cartVal;
+    const caddyPP=caddyVal>=100000?Math.round(caddyVal/ppl):caddyVal;
     const items=[];
     if(s.green) items.push(`그린피 ${fmtMoney(s.green)}`);
-    if(s.cart)  items.push(`카트 ${fmtMoney(s.cart)}`);
-    if(s.caddy) items.push(`캐디 ${fmtMoney(s.caddy)}`);
+    if(s.cart)  items.push(`카트 ${fmtMoney(cartPP)}${cartVal>=100000?' (÷'+ppl+')':''}`);
+    if(s.caddy) items.push(`캐디 ${fmtMoney(caddyPP)}${caddyVal>=100000?' (÷'+ppl+')':''}`);
     if(s.other) items.push(`기타 ${fmtMoney(s.other)}`);
     costDetail=`<div class="sche-detail">💳 ${items.join(' · ')}</div>`;
   }
