@@ -955,6 +955,7 @@ let diComps = [];
 let filterCourse = 'all';
 let filterType   = 'all';
 let filterSort   = 'date-asc';
+let hidePast     = true;
 
 // 캘린더 상태
 const today = new Date();
@@ -1111,11 +1112,14 @@ function renderFilterBar(){
     `<span style="font-size:11px;font-weight:700;color:var(--tl);padding:6px 2px;white-space:nowrap;">유형:</span>`+
     to.map(([k,l])=>`<button class="fbtn${filterType===k?' active':''}" onclick="setFilter('t','${k}')">${l}</button>`).join('')+
     `<span style="width:1px;background:var(--bd);margin:4px 2px;flex-shrink:0;"></span>`+
-    so.map(([k,l])=>`<button class="fbtn${filterSort===k?' active':''}" onclick="setFilter('s','${k}')">${l}</button>`).join('');
+    so.map(([k,l])=>`<button class="fbtn${filterSort===k?' active':''}" onclick="setFilter('s','${k}')">${l}</button>`).join('')+
+    `<span style="width:1px;background:var(--bd);margin:4px 2px;flex-shrink:0;"></span>`+
+    `<button class="fbtn${hidePast?' active':''}" onclick="setFilter('h','toggle')">${hidePast?'🙈 지난일정 숨김':'👁 지난일정 표시'}</button>`;
 }
-function setFilter(k,v){ if(k==='c')filterCourse=v; if(k==='t')filterType=v; if(k==='s')filterSort=v; renderFilterBar(); renderFullList(); }
+function setFilter(k,v){ if(k==='c')filterCourse=v; if(k==='t')filterType=v; if(k==='s')filterSort=v; if(k==='h')hidePast=!hidePast; renderFilterBar(); renderFullList(); }
 function renderFullList(){
   let list=[...schedules];
+  if(hidePast) list=list.filter(s=>s.date>=toDateStr(today));
   if(filterCourse!=='all') list=list.filter(s=>(s.courses||[]).includes(filterCourse));
   if(filterType!=='all')   list=list.filter(s=>s.type===filterType);
   list.sort((a,b)=>{
