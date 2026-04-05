@@ -110,6 +110,11 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
 .sche-btns{display:flex;gap:6px;}
 .btn-edit{flex:1;background:var(--gp);border:none;border-radius:10px;padding:8px;font-size:12px;color:var(--gd);font-weight:700;cursor:pointer;font-family:inherit;}
 .btn-del{flex:1;background:#fee2e2;border:none;border-radius:10px;padding:8px;font-size:12px;color:#dc2626;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-share{flex:1;background:#e0e7ff;border:none;border-radius:10px;padding:8px;font-size:12px;color:#4338ca;font-weight:700;cursor:pointer;font-family:inherit;}
+.shared-badge{background:#e0e7ff;color:#4338ca;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:400;animation:toastIn .3s ease,toastOut .3s ease 2s forwards;pointer-events:none;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0}}
 .empty{text-align:center;padding:48px 20px;color:var(--tl);font-size:14px;line-height:2;}
 
 /* ── 필터 ── */
@@ -444,6 +449,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
       <input class="finput" type="text" id="di-course" placeholder="예: 파인비치 CC, 제주 오라 CC">
     </div>
     <div>
+      <div class="flabel">코스 이름 (예: 동코스, A코스)</div>
+      <input class="finput" type="text" id="di-courseName" placeholder="코스 이름 입력 (선택)">
+    </div>
+    <div>
       <div class="flabel">티오프 시간</div>
       <input class="finput" type="time" id="di-time">
     </div>
@@ -541,6 +550,11 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var
           <button class="btn-direct-add" onclick="addDirectCourse()">＋ 추가</button>
         </div>
         <div class="direct-tags" id="directCourseTags"></div>
+      </div>
+
+      <div>
+        <div class="flabel">코스 이름 (예: 동코스, A코스)</div>
+        <input class="finput" type="text" id="f-courseName" placeholder="코스 이름 입력 (선택)">
       </div>
 
       <div>
@@ -975,7 +989,13 @@ let curTab = 'cal';
 function toDateStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function fmtDate(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`; }
 function fmtMoney(n){ if(!n||n==0) return '0원'; return new Intl.NumberFormat('ko-KR').format(n)+'원'; }
-function totalCost(s){ return (Number(s.green)||0)+(Number(s.cart)||0)+(Number(s.caddy)||0)+(Number(s.other)||0); }
+function totalCost(s){
+  const green=Number(s.green)||0, cart=Number(s.cart)||0, caddy=Number(s.caddy)||0, other=Number(s.other)||0;
+  const ppl=(s.companions||[]).length+1;
+  const cartPP=cart>=100000?Math.round(cart/ppl):cart;
+  const caddyPP=caddy>=100000?Math.round(caddy/ppl):caddy;
+  return green+cartPP+caddyPP+other;
+}
 async function saveData(){
   if(!currentUser) return;
   const uid = currentUser.uid;
@@ -1060,23 +1080,36 @@ function changeMonth(d){ calMonth+=d; if(calMonth<0){calMonth=11;calYear--;} if(
 function scheCard(s){
   const tl = s.type==='confirmed'?'🟢 동반자 확정':s.type==='open'?'🟡 동반자 미정':'🟣 예약 예정';
   const bc = s.type==='confirmed'?'bc':s.type==='open'?'bo':'bp';
-  const courseStr = (s.courses||[]).join(', ')||'미정';
+  const courseStr = ((s.courses||[]).join(', ')||'미정') + (s.courseName ? ` (${s.courseName})` : '');
   const compStr   = (s.companions||[]).length?(s.companions||[]).join(', '):'미정';
   const timeHtml  = s.time ? `<div class="sche-time">⏰ ${s.time} 티오프</div>` : '';
   const tc = totalCost(s);
 
   let costDetail='';
   if(s.green||s.cart||s.caddy||s.other){
+    const ppl=(s.companions||[]).length+1;
+    const cartVal=Number(s.cart)||0, caddyVal=Number(s.caddy)||0;
+    const cartPP=cartVal>=100000?Math.round(cartVal/ppl):cartVal;
+    const caddyPP=caddyVal>=100000?Math.round(caddyVal/ppl):caddyVal;
     const items=[];
     if(s.green) items.push(`그린피 ${fmtMoney(s.green)}`);
-    if(s.cart)  items.push(`카트 ${fmtMoney(s.cart)}`);
-    if(s.caddy) items.push(`캐디 ${fmtMoney(s.caddy)}`);
+    if(s.cart)  items.push(`카트 ${fmtMoney(cartPP)}${cartVal>=100000?' (÷'+ppl+')':''}`);
+    if(s.caddy) items.push(`캐디 ${fmtMoney(caddyPP)}${caddyVal>=100000?' (÷'+ppl+')':''}`);
     if(s.other) items.push(`기타 ${fmtMoney(s.other)}`);
     costDetail=`<div class="sche-detail">💳 ${items.join(' · ')}</div>`;
   }
   const photos=(s.photos||[]);
   const photoHtml = photos.length ? `<div class="photo-row">${photos.map(p=>`<img class="photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>` : '';
   const memoHtml  = s.memo ? `<div class="sche-detail">📝 ${s.memo}</div>` : '';
+
+  const sharedBadge = s.sharedFrom ? `<span class="shared-badge">📨 ${s.sharedFrom.name}님이 공유</span>` : '';
+  const btns = s.sharedFrom
+    ? `<div class="sche-btns"><button class="btn-share" onclick="shareSchedule('${s.id}')">📤 초대</button></div>`
+    : `<div class="sche-btns">
+        <button class="btn-share" onclick="shareSchedule('${s.id}')">📤 초대</button>
+        <button class="btn-edit" onclick="openEdit('${s.id}')">✏️ 수정</button>
+        <button class="btn-del"  onclick="delSchedule('${s.id}')">🗑️ 삭제</button>
+      </div>`;
 
   return `<div class="sche-card ${s.type}">
     <div class="sche-top">
@@ -1088,12 +1121,10 @@ function scheCard(s){
       <span class="chip">👥 ${compStr}</span>
       ${(s.companions||[]).length?`<span class="chip">${(s.companions||[]).length+1}명</span>`:''}
       ${tc>0?`<span class="chip-cost">💰 ${fmtMoney(tc)}</span>`:''}
+      ${sharedBadge}
     </div>
     ${costDetail}${photoHtml}${memoHtml}
-    <div class="sche-btns">
-      <button class="btn-edit" onclick="openEdit('${s.id}')">✏️ 수정</button>
-      <button class="btn-del"  onclick="delSchedule('${s.id}')">🗑️ 삭제</button>
-    </div>
+    ${btns}
   </div>`;
 }
 function viewPhoto(src){ document.getElementById('photoFSImg').src=src; document.getElementById('photoFS').style.display='flex'; }
@@ -1305,6 +1336,7 @@ async function okAlarm(id){
 async function cancelReserve(id){
   const s=schedules.find(x=>x.id===id); if(!s) return;
   if(confirm(`⚠️ 예약 취소\n\n골프장: ${(s.courses||[]).join(', ')||'미정'}\n날짜: ${fmtDate(s.date)}\n\n이 일정을 취소(삭제)하시겠습니까?`)){
+    await deleteSharedCopies(id);
     await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
     schedules=schedules.filter(x=>x.id!==id);
     await saveData(); renderAll(); alert('✅ 예약이 취소되었습니다.');
@@ -1375,7 +1407,8 @@ async function saveDirect(){
   if(!courses.includes(name)){ courses.push(name); }
   const obj={
     date, time:document.getElementById('di-time').value,
-    type:diType, courses:[name], companions:[...diComps],
+    type:diType, courses:[name], courseName:document.getElementById('di-courseName').value.trim(),
+    companions:[...diComps],
     green:0,cart:0,caddy:0,other:0,
     memo:document.getElementById('di-memo').value.trim(), photos:[],
   };
@@ -1385,11 +1418,14 @@ async function saveDirect(){
   // 초기화
   document.getElementById('di-date').value=toDateStr(today);
   document.getElementById('di-course').value='';
+  document.getElementById('di-courseName').value='';
   document.getElementById('di-time').value='';
   document.getElementById('di-memo').value='';
   diComps=[]; selDiType('confirmed'); renderDiComps(); renderManage();
   renderAll();
   alert(`✅ "${name}" 일정이 캘린더에 추가되었습니다!`);
+  // 등록된 사용자 동반자에게 일정 공유
+  await shareWithCompanions(obj,docRef.id);
 }
 
 // ═══════════════════════════════════════
@@ -1404,6 +1440,7 @@ function resetForm(){
   document.getElementById('f-caddy').value='';
   document.getElementById('f-other').value='';
   document.getElementById('f-memo').value='';
+  document.getElementById('f-courseName').value='';
   document.getElementById('f-direct-course').value='';
   document.getElementById('compInputBtn').value='';
   selType('confirmed');
@@ -1435,6 +1472,7 @@ function openEdit(id){
   document.getElementById('f-caddy').value=s.caddy||'';
   document.getElementById('f-other').value=s.other||'';
   document.getElementById('f-memo').value=s.memo||'';
+  document.getElementById('f-courseName').value=s.courseName||'';
   document.getElementById('f-direct-course').value='';
   selType(formType);
   renderCompTags();
@@ -1448,7 +1486,8 @@ async function saveSchedule(){
   if(!formCourses.length){ alert('골프장을 선택하거나 직접 입력해주세요.'); return; }
   const obj={
     date, time:document.getElementById('f-time').value,
-    type:formType, courses:[...formCourses], companions:[...formComps],
+    type:formType, courses:[...formCourses], courseName:document.getElementById('f-courseName').value.trim(),
+    companions:[...formComps],
     green:Number(document.getElementById('f-green').value)||0,
     cart: Number(document.getElementById('f-cart').value)||0,
     caddy:Number(document.getElementById('f-caddy').value)||0,
@@ -1457,21 +1496,128 @@ async function saveSchedule(){
     photos:[...formPhotos],
   };
   const uid = currentUser.uid;
+  let savedId;
   if(editId){
     await db.collection('users').doc(uid).collection('schedules').doc(editId).update(obj);
     schedules=schedules.map(s=>s.id===editId?{...s,...obj}:s);
+    savedId=editId;
   } else {
     const docRef = await db.collection('users').doc(uid).collection('schedules').add(obj);
     schedules.push({...obj, id: docRef.id});
+    savedId=docRef.id;
   }
   // 직접입력 골프장 자동 등록
   formCourses.forEach(c=>{ if(!courses.includes(c)) courses.push(c); });
   await saveData(); closeModal('formModal'); renderAll();
+  // 등록된 사용자 동반자에게 일정 공유
+  await shareWithCompanions(obj,savedId);
 }
 async function delSchedule(id){
   if(!confirm('일정을 삭제하시겠습니까?')) return;
+  await deleteSharedCopies(id);
   await db.collection('users').doc(currentUser.uid).collection('schedules').doc(id).delete();
   schedules=schedules.filter(s=>s.id!==id); await saveData(); renderAll();
+}
+
+// ── 토스트 알림 ──
+function showToast(msg){
+  const old=document.querySelector('.toast'); if(old) old.remove();
+  const div=document.createElement('div'); div.className='toast'; div.textContent=msg;
+  document.body.appendChild(div); setTimeout(()=>div.remove(),2500);
+}
+
+// ── 초대 메시지 공유 ──
+function buildShareMessage(s){
+  const courseStr=((s.courses||[]).join(', ')||'미정')+(s.courseName?` (${s.courseName})`:'');
+  const dateStr=fmtDate(s.date);
+  const dayNames=['일','월','화','수','목','금','토'];
+  const dayOfWeek=dayNames[new Date(s.date+'T00:00:00').getDay()];
+  const timeStr=s.time?` ${s.time}`:'';
+  const myName=currentUserData?currentUserData.name:'';
+  const compList=(s.companions||[]).length?[myName,...(s.companions||[])].filter(Boolean).join(', '):'';
+  let msg=`⛳ 골프 일정 초대\n\n`;
+  msg+=`📅 ${dateStr} (${dayOfWeek})${timeStr}\n`;
+  msg+=`🏌️ ${courseStr}\n`;
+  if(compList) msg+=`👥 ${compList}\n`;
+  if(s.memo) msg+=`📝 ${s.memo}\n`;
+  msg+=`\n함께 라운드 하시겠습니까? 🏌️‍♂️`;
+  return msg;
+}
+async function shareSchedule(id){
+  const s=schedules.find(x=>x.id===id); if(!s) return;
+  const message=buildShareMessage(s);
+  if(navigator.share){
+    try{ await navigator.share({title:'⛳ 골프 일정 초대',text:message}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(message); showToast('📋 초대 메시지가 복사되었습니다!'); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=message;
+    ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('📋 초대 메시지가 복사되었습니다!');
+  }
+}
+
+// ── 동반자 일정 공유 (등록된 사용자) ──
+let userNameCache=null; let userNameCacheTime=0;
+async function getUserNameMap(){
+  const now=Date.now();
+  if(userNameCache && (now-userNameCacheTime)<300000) return userNameCache;
+  const snap=await db.collection('users').get();
+  userNameCache=new Map();
+  snap.docs.forEach(d=>{
+    const data=d.data();
+    if(d.id!==currentUser.uid) userNameCache.set(data.name,{uid:d.id,name:data.name});
+  });
+  userNameCacheTime=now;
+  return userNameCache;
+}
+async function shareWithCompanions(scheduleObj,scheduleId){
+  if(scheduleObj.sharedFrom) return;
+  if(!scheduleObj.companions||!scheduleObj.companions.length) return;
+  try{
+    const nameMap=await getUserNameMap();
+    const sharedToUids=[];
+    for(const compName of scheduleObj.companions){
+      const matched=nameMap.get(compName); if(!matched) continue;
+      sharedToUids.push(matched.uid);
+      const sharedObj={
+        date:scheduleObj.date, time:scheduleObj.time, type:scheduleObj.type,
+        courses:[...(scheduleObj.courses||[])], companions:[...(scheduleObj.companions||[])],
+        green:scheduleObj.green||0, cart:scheduleObj.cart||0, caddy:scheduleObj.caddy||0, other:scheduleObj.other||0,
+        memo:scheduleObj.memo||'', photos:[],
+        sharedFrom:{uid:currentUser.uid, name:currentUserData.name},
+        originalScheduleId:scheduleId, originalOwnerUid:currentUser.uid,
+      };
+      const existSnap=await db.collection('users').doc(matched.uid).collection('schedules')
+        .where('originalScheduleId','==',scheduleId).where('originalOwnerUid','==',currentUser.uid).get();
+      if(existSnap.empty) await db.collection('users').doc(matched.uid).collection('schedules').add(sharedObj);
+      else await existSnap.docs[0].ref.update(sharedObj);
+    }
+    // 이전에 공유했지만 동반자에서 제거된 사용자의 공유본 삭제
+    const prevDoc=await db.collection('users').doc(currentUser.uid).collection('schedules').doc(scheduleId).get();
+    const prevUids=(prevDoc.exists&&prevDoc.data().sharedToUids)||[];
+    const removedUids=prevUids.filter(u=>!sharedToUids.includes(u));
+    for(const uid of removedUids){
+      const snap=await db.collection('users').doc(uid).collection('schedules')
+        .where('originalScheduleId','==',scheduleId).where('originalOwnerUid','==',currentUser.uid).get();
+      for(const d of snap.docs) await d.ref.delete();
+    }
+    // sharedToUids 저장
+    await db.collection('users').doc(currentUser.uid).collection('schedules').doc(scheduleId).update({sharedToUids});
+  }catch(e){ console.error('공유 실패:',e); }
+}
+async function deleteSharedCopies(scheduleId){
+  try{
+    const doc=await db.collection('users').doc(currentUser.uid).collection('schedules').doc(scheduleId).get();
+    const uids=(doc.exists&&doc.data().sharedToUids)||[];
+    for(const uid of uids){
+      const snap=await db.collection('users').doc(uid).collection('schedules')
+        .where('originalScheduleId','==',scheduleId).where('originalOwnerUid','==',currentUser.uid).get();
+      for(const d of snap.docs) await d.ref.delete();
+    }
+  }catch(e){ console.error('공유본 삭제 실패:',e); }
 }
 
 // ── 일정 유형 선택 ──
