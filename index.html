@@ -120,7 +120,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 
 /* ── 알람 배너 (glass) ── */
 .alarm-wrap{margin:14px 16px 0;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);border:1px solid rgba(255,255,255,.5);}
-.alarm-head{background:linear-gradient(135deg,#F43F5E,#DC2626);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px;cursor:pointer;user-select:none;position:relative;overflow:hidden;}
+.alarm-head{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px;cursor:pointer;user-select:none;position:relative;overflow:hidden;}
 .alarm-head::before{content:'';position:absolute;right:-30px;top:-20px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2) 0%,transparent 70%);pointer-events:none;}
 .alarm-head-txt{flex:1;position:relative;z-index:1;letter-spacing:-.01em;}
 .alarm-fold{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;position:relative;z-index:1;transition:background .2s ease;}
@@ -128,7 +128,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .alarm-body{background:rgba(255,255,255,.96);backdrop-filter:blur(12px);overflow:hidden;transition:max-height .4s var(--ease-out);}
 .alarm-item{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #fef2f2;}
 .alarm-item:last-child{border-bottom:none;}
-.alarm-dday{background:#fef2f2;color:#dc2626;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:900;min-width:52px;text-align:center;line-height:1.2;flex-shrink:0;}
+.alarm-dday{background:#FEF3C7;color:#B45309;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:900;min-width:52px;text-align:center;line-height:1.2;flex-shrink:0;}
 .alarm-dday span{font-size:10px;display:block;font-weight:600;}
 .alarm-info{flex:1;cursor:pointer;}
 .alarm-course-txt{font-size:14px;font-weight:800;color:var(--tx);}
@@ -136,10 +136,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .alarm-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
 .btn-alarm-ok{background:#d1fae5;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:#1a6b3c;cursor:pointer;font-family:inherit;}
 .btn-alarm-cancel{background:#fee2e2;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:#dc2626;cursor:pointer;font-family:inherit;}
-.notif-req{margin:14px 16px 0;background:linear-gradient(135deg,#1E40AF,#3B82F6);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh-lg);position:relative;overflow:hidden;}
+.notif-req{margin:14px 16px 0;background:linear-gradient(135deg,#047857,#10B981);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh-lg);position:relative;overflow:hidden;}
 .notif-req::before{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18) 0%,transparent 70%);pointer-events:none;}
 .notif-req-txt{flex:1;color:#fff;font-size:13px;font-weight:600;line-height:1.5;}
-.notif-req-btn{background:#fff;color:#1e40af;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}
+.notif-req-btn{background:#fff;color:var(--gd);border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;min-height:36px;}
 
 /* ── 탭 (glass pill) ── */
 .top-tabs{
@@ -152,11 +152,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   overflow-x:auto;scrollbar-width:none;position:relative;z-index:3;
 }
 .top-tabs::-webkit-scrollbar{display:none;}
-.top-tab{flex:1;min-width:0;border:none;border-radius:var(--r);padding:11px 6px;font-weight:700;cursor:pointer;font-size:11.5px;background:transparent;color:var(--tm);font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all .3s var(--ease-spring);white-space:nowrap;position:relative;}
-.top-tab .icon{width:14px;height:14px;}
+.top-tab{flex:1;min-width:0;border:none;border-radius:var(--r);padding:13px 8px;font-weight:700;cursor:pointer;font-size:13px;background:transparent;color:#475569;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .3s var(--ease-spring);white-space:nowrap;position:relative;min-height:46px;}
+.top-tab .icon{width:15px;height:15px;}
 .top-tab:hover{color:var(--g);background:rgba(16,185,129,.08);}
 .top-tab.active{background:linear-gradient(135deg,#047857,#10B981);color:#fff;box-shadow:0 4px 14px -2px rgba(4,120,87,.4);}
 .top-tab.active:hover{color:#fff;}
+
+/* ── 분석 세그먼트 컨트롤 ── */
+.seg-ctrl{display:flex;gap:4px;margin:0 16px 12px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:4px;box-shadow:var(--sh);}
+.seg-btn{flex:1;border:none;background:transparent;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:700;color:var(--tm);font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .25s var(--ease-out);min-height:42px;}
+.seg-btn .icon{width:14px;height:14px;}
+.seg-btn:hover{color:var(--g);background:rgba(16,185,129,.06);}
+.seg-btn.active{background:var(--g);color:#fff;box-shadow:0 2px 8px -2px rgba(4,120,87,.4);}
 
 /* ── 하단 네비 (floating glass pill - 2026 trend) ── */
 .bottom-nav{
@@ -168,7 +175,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   display:flex;padding:10px 8px;z-index:100;
   box-shadow:var(--sh-xl),inset 0 1px 0 rgba(255,255,255,.8);
 }
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;font-family:inherit;padding:6px 0;color:var(--tl);transition:all .3s var(--ease-spring);min-height:52px;border-radius:var(--r);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;font-family:inherit;padding:6px 0;color:#64748B;transition:all .3s var(--ease-spring);min-height:52px;border-radius:var(--r);}
 .nav-btn:hover{color:var(--g);}
 .nav-btn:active{transform:scale(.92);}
 .nav-btn .icon{width:22px;height:22px;transition:transform .3s var(--ease-spring);}
@@ -187,7 +194,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .nav-btn.fab .icon{width:26px;height:26px;}
 .nav-btn.fab .nav-label{margin-top:2px;font-size:9.5px;}
 .nav-icon{display:inline-flex;align-items:center;justify-content:center;}
-.nav-label{font-size:10px;font-weight:700;color:var(--tl);transition:color .2s ease;}
+.nav-label{font-size:10px;font-weight:700;color:#64748B;transition:color .2s ease;}
 .nav-btn.active{color:var(--g);}
 .nav-btn.active .icon{color:var(--g);}
 .nav-btn.active .nav-label{color:var(--g);}
@@ -384,6 +391,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .fsec{font-size:12px;font-weight:800;color:var(--gd);padding:10px 0 4px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
 .fsec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(16,185,129,.25),transparent);}
+.fsec-toggle{width:100%;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:12px;padding:13px 16px;font-size:13px;font-weight:800;color:var(--gd);font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.01em;transition:background .2s ease;min-height:46px;}
+.fsec-toggle:hover{background:rgba(16,185,129,.12);}
+.fsec-hint{font-size:11px;font-weight:600;color:var(--tm);margin-left:4px;}
+.fsec-chev{transition:transform .25s var(--ease-out);}
+.fsec-toggle[aria-expanded="true"] .fsec-chev{transform:rotate(180deg);}
+.cost-sec{padding-top:12px;}
 .type-sel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .type-btn{border:2px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--tm);font-family:inherit;background:#fff;transition:all .18s ease;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:80px;justify-content:center;}
 .type-btn .type-dot{width:14px;height:14px;border-radius:50%;background:#CBD5E1;transition:background .18s ease,transform .18s ease;}
@@ -488,7 +501,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .auth-error{background:#fee2e2;color:#dc2626;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
 .auth-success{background:#d1fae5;color:#1a6b3c;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;display:none;}
 .auth-migrate{background:var(--gp);color:var(--gd);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;text-align:center;margin-bottom:8px;}
-.auth-link{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13px;}
+.auth-link{color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;font-size:13px;background:none;border:none;font-family:inherit;padding:8px 4px;min-height:36px;}
+.auth-link:hover{color:var(--gd);}
 .auth-links{display:flex;justify-content:center;gap:16px;margin-top:12px;}
 
 /* ── 헤더 사용자 표시 ── */
@@ -609,8 +623,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
         <button class="auth-btn" onclick="doLogin()">로그인</button>
       </div>
       <div class="auth-links">
-        <a class="auth-link" onclick="showRegister()">회원가입</a>
-        <a class="auth-link" onclick="showForgotPw()">비밀번호 찾기</a>
+        <button type="button" class="auth-link" onclick="showRegister()">회원가입</button>
+        <button type="button" class="auth-link" onclick="showForgotPw()">비밀번호 찾기</button>
       </div>
     </div>
 
@@ -629,7 +643,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
         </div>
         <div class="auth-field">
           <label class="auth-label">비밀번호</label>
-          <input class="auth-input" id="regPw" type="password" placeholder="4자 이상" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPw2').focus()">
+          <input class="auth-input" id="regPw" type="password" placeholder="8자 이상, 영문+숫자" autocomplete="new-password" onkeydown="if(event.key==='Enter')document.getElementById('regPw2').focus()">
         </div>
         <div class="auth-field">
           <label class="auth-label">비밀번호 확인</label>
@@ -638,7 +652,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
         <button class="auth-btn" onclick="doRegister()">회원가입</button>
       </div>
       <div class="auth-links">
-        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+        <button type="button" class="auth-link" onclick="showLogin()">로그인으로 돌아가기</button>
       </div>
     </div>
 
@@ -655,7 +669,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
         <button class="auth-btn" onclick="doForgotPw()">비밀번호 재설정 이메일 발송</button>
       </div>
       <div class="auth-links">
-        <a class="auth-link" onclick="showLogin()">로그인으로 돌아가기</a>
+        <button type="button" class="auth-link" onclick="showLogin()">로그인으로 돌아가기</button>
       </div>
     </div>
   </div>
@@ -667,10 +681,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="hd-sub">Golf Schedule</div>
   <div class="hd-user" id="hdUser"></div>
   <div class="hd-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>골프 캘린더</div>
-  <div class="hd-btns">
-    <button class="hbtn hbtn-g" onclick="openAdd()" aria-label="일정 추가"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>일정 추가</button>
-    <button class="hbtn hbtn-w" onclick="goManage()" aria-label="골프장 관리"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>골프장 관리</button>
-  </div>
 </div>
 
 <!-- 알람 -->
@@ -680,11 +690,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <!-- 메인 캘린더 -->
 <div id="mainCal">
   <div class="top-tabs" role="tablist">
-    <button class="top-tab active" id="tt-cal"   role="tab" onclick="switchTab('cal')"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>캘린더</button>
-    <button class="top-tab"        id="tt-list"  role="tab" onclick="switchTab('list')"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>목록</button>
-    <button class="top-tab"        id="tt-stats" role="tab" onclick="switchTab('stats')"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>통계</button>
-    <button class="top-tab"        id="tt-comp"  role="tab" onclick="switchTab('comp')"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>동반자</button>
-    <button class="top-tab"        id="tt-cost"  role="tab" onclick="switchTab('cost')"><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg>비용</button>
+    <button class="top-tab active" id="tt-cal"      role="tab" onclick="switchTab('cal')"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>캘린더</button>
+    <button class="top-tab"        id="tt-list"     role="tab" onclick="switchTab('list')"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>목록</button>
+    <button class="top-tab"        id="tt-analysis" role="tab" onclick="switchTab('analysis')"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>분석</button>
   </div>
 
   <!-- 캘린더 뷰 -->
@@ -711,31 +719,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
     <div class="sche-list" id="fullList"></div>
   </div>
 
-  <!-- 통계 뷰 -->
-  <div id="v-stats" style="display:none;">
-    <div class="stats-row" id="statsCards"></div>
-    <div class="divider"></div>
-    <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>골프장별 현황</div>
-    <div class="sche-list" id="statsCourses"></div>
-  </div>
+  <!-- 분석 뷰 (통계 + 동반자 + 비용 통합) -->
+  <div id="v-analysis" style="display:none;">
+    <div class="seg-ctrl" role="tablist" aria-label="분석 카테고리">
+      <button class="seg-btn active" id="seg-stats" role="tab" onclick="selAnalysisSeg('stats')"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>통계</button>
+      <button class="seg-btn"        id="seg-comp"  role="tab" onclick="selAnalysisSeg('comp')"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>동반자</button>
+      <button class="seg-btn"        id="seg-cost"  role="tab" onclick="selAnalysisSeg('cost')"><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg>비용</button>
+    </div>
 
-  <!-- 동반자 뷰 -->
-  <div id="v-comp" style="display:none;">
-    <div class="stats-row" id="compSummary"></div>
-    <div class="divider"></div>
-    <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg>동반자 랭킹</div>
-    <div class="comp-list" id="compRank"></div>
-  </div>
+    <div id="v-stats">
+      <div class="stats-row" id="statsCards"></div>
+      <div class="divider"></div>
+      <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>골프장별 현황</div>
+      <div class="sche-list" id="statsCourses"></div>
+    </div>
 
-  <!-- 비용 뷰 -->
-  <div id="v-cost" style="display:none;">
-    <div class="cost-card" id="costSummary"></div>
-    <div class="divider"></div>
-    <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>월별 비용</div>
-    <div class="sche-list" id="costMonthly"></div>
-    <div class="divider"></div>
-    <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>골프장별 평균 비용</div>
-    <div class="sche-list" id="costByCourse"></div>
+    <div id="v-comp" style="display:none;">
+      <div class="stats-row" id="compSummary"></div>
+      <div class="divider"></div>
+      <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg>동반자 랭킹</div>
+      <div class="comp-list" id="compRank"></div>
+    </div>
+
+    <div id="v-cost" style="display:none;">
+      <div class="cost-card" id="costSummary"></div>
+      <div class="divider"></div>
+      <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>월별 비용</div>
+      <div class="sche-list" id="costMonthly"></div>
+      <div class="divider"></div>
+      <div class="sec-title"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>골프장별 평균 비용</div>
+      <div class="sche-list" id="costByCourse"></div>
+    </div>
   </div>
 </div>
 
@@ -749,46 +763,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   <div class="add-row" style="margin-top:12px;">
     <input class="add-input" id="newCourse" placeholder="골프장 이름 입력" onkeydown="if(event.key==='Enter')addCourse()">
     <button class="btn-add-course" onclick="addCourse()" aria-label="골프장 추가"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;vertical-align:-2px;"><use href="#i-plus"/></svg> 추가</button>
-  </div>
-
-  <!-- 관리화면 직접 입력 -->
-  <div style="padding:18px 16px 0;font-size:13px;font-weight:800;color:var(--gd);display:flex;align-items:center;gap:8px;"><svg class="icon" aria-hidden="true" style="width:16px;height:16px;color:var(--g);"><use href="#i-calendar"/></svg>캘린더에 일정 직접 입력</div>
-  <div class="direct-form">
-    <div>
-      <div class="flabel">날짜 *</div>
-      <input class="finput" type="date" id="di-date">
-    </div>
-    <div>
-      <div class="flabel">골프장명 * (직접 입력)</div>
-      <input class="finput" type="text" id="di-course" placeholder="예: 파인비치 CC, 제주 오라 CC">
-    </div>
-    <div>
-      <div class="flabel">코스 이름 (예: 동코스, A코스)</div>
-      <input class="finput" type="text" id="di-courseName" placeholder="코스 이름 입력 (선택)">
-    </div>
-    <div>
-      <div class="flabel">티오프 시간</div>
-      <input class="finput" type="time" id="di-time">
-    </div>
-    <div>
-      <div class="flabel">일정 유형</div>
-      <div class="type-sel">
-        <button class="type-btn sel-confirmed" id="di-confirmed" onclick="selDiType('confirmed')"><span class="type-dot"></span><span>동반자<br>확정</span></button>
-        <button class="type-btn" id="di-open" onclick="selDiType('open')"><span class="type-dot"></span><span>동반자<br>미정</span></button>
-        <button class="type-btn" id="di-planned" onclick="selDiType('planned')"><span class="type-dot"></span><span>예약<br>예정</span></button>
-      </div>
-    </div>
-    <div>
-      <div class="flabel">동반자 (입력 후 Enter)</div>
-      <div class="tag-wrap" id="diCompWrap" onclick="document.getElementById('diCompInput').focus()">
-        <input class="tag-input" id="diCompInput" placeholder="이름 입력 후 Enter" onkeydown="handleDiComp(event)">
-      </div>
-    </div>
-    <div>
-      <div class="flabel">메모</div>
-      <input class="finput" type="text" id="di-memo" placeholder="추가 메모 (선택)">
-    </div>
-    <button class="btn-save" onclick="saveDirect()"><svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>캘린더에 추가</button>
   </div>
 
   <div class="info-box">
@@ -822,8 +796,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   <button class="nav-btn fab" onclick="openAdd()" aria-label="일정 추가">
     <span class="nav-icon-wrap"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></span><span class="nav-label" style="margin-top:2px;">추가</span>
   </button>
-  <button class="nav-btn" id="nb-stats" onclick="goCalendar();switchTab('stats')" aria-label="통계">
-    <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span><span class="nav-label">통계</span>
+  <button class="nav-btn" id="nb-analysis" onclick="goCalendar();switchTab('analysis')" aria-label="분석">
+    <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span><span class="nav-label">분석</span>
   </button>
   <button class="nav-btn" id="nb-manage" onclick="goManage()" aria-label="관리">
     <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg></span><span class="nav-label">관리</span>
@@ -872,24 +846,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
       </div>
 
       <div>
-        <div class="flabel">동반자 (이름 입력 후 Enter 또는 + 버튼)</div>
+        <div class="flabel">동반자 (이름 입력 후 Enter)</div>
         <div class="tag-wrap" id="compWrap" onclick="document.getElementById('compInput').focus()">
           <input class="tag-input" id="compInput" placeholder="이름 입력 후 Enter" onkeyup="handleComp(event)">
         </div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <input class="direct-input" id="compInputBtn" placeholder="동반자 이름 입력" style="flex:1;">
-          <button class="btn-direct-add" onclick="addCompByBtn()" aria-label="동반자 추가"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;vertical-align:-2px;"><use href="#i-plus"/></svg> 추가</button>
-        </div>
       </div>
 
-      <div class="fsec" style="display:flex;align-items:center;gap:6px;"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;color:var(--g);"><use href="#i-wallet"/></svg>비용 정보</div>
-      <div class="frow">
-        <div><div class="flabel">그린피 (원)</div><input class="finput" type="number" id="f-green" placeholder="0"></div>
-        <div><div class="flabel">카트비 (원)</div><input class="finput" type="number" id="f-cart" placeholder="0"></div>
-      </div>
-      <div class="frow">
-        <div><div class="flabel">캐디피 (원)</div><input class="finput" type="number" id="f-caddy" placeholder="0"></div>
-        <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
+      <button type="button" class="fsec-toggle" id="costToggle" onclick="toggleCostSec()" aria-expanded="false" aria-controls="costSec">
+        <span style="display:inline-flex;align-items:center;gap:6px;"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;color:var(--g);"><use href="#i-wallet"/></svg>비용 정보 <span class="fsec-hint">(선택)</span></span>
+        <svg class="icon fsec-chev" aria-hidden="true" style="width:16px;height:16px;color:var(--tm);"><use href="#i-chevron-down"/></svg>
+      </button>
+      <div id="costSec" class="cost-sec" style="display:none;">
+        <div class="frow">
+          <div><div class="flabel">그린피 (원)</div><input class="finput" type="number" id="f-green" placeholder="0"></div>
+          <div><div class="flabel">카트비 (원)</div><input class="finput" type="number" id="f-cart" placeholder="0"></div>
+        </div>
+        <div class="frow" style="margin-top:12px;">
+          <div><div class="flabel">캐디피 (원)</div><input class="finput" type="number" id="f-caddy" placeholder="0"></div>
+          <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
+        </div>
       </div>
 
       <div class="fsec" style="display:flex;align-items:center;gap:6px;"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;color:var(--g);"><use href="#i-note"/></svg>메모</div>
@@ -1013,7 +988,8 @@ async function doRegister(){
 
   if(!name) return showAuthError('registerError','이름을 입력해주세요.');
   if(!email) return showAuthError('registerError','이메일을 입력해주세요.');
-  if(!pw || pw.length < 6) return showAuthError('registerError','비밀번호는 6자 이상 입력해주세요.');
+  if(!pw || pw.length < 8) return showAuthError('registerError','비밀번호는 8자 이상 입력해주세요.');
+  if(!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return showAuthError('registerError','비밀번호는 영문과 숫자를 모두 포함해야 합니다.');
   if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
 
   try {
@@ -1154,7 +1130,7 @@ async function goAdmin(){
   document.getElementById('mainCal').style.display = 'none';
   document.getElementById('mainManage').style.display = 'none';
   document.getElementById('adminPanel').style.display = 'block';
-  ['nb-cal','nb-list','nb-stats','nb-manage'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  ['nb-cal','nb-list','nb-analysis','nb-manage'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   await renderAdminPanel();
 }
 
@@ -1275,10 +1251,6 @@ let formComps     = [];      // 동반자 배열
 let formCourses   = [];      // 선택된 골프장 (칩+직접입력 통합)
 let formPhotos    = [];      // base64 사진
 
-// 관리화면 직접입력 상태
-let diType  = 'confirmed';
-let diComps = [];
-
 // 필터 상태
 let filterCourse = 'all';
 let filterType   = 'all';
@@ -1331,24 +1303,34 @@ function goManage(){
   document.getElementById('mainCal').style.display = 'none';
   document.getElementById('mainManage').style.display = 'block';
   document.getElementById('adminPanel').style.display = 'none';
-  ['nb-cal','nb-list','nb-stats'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  ['nb-cal','nb-list','nb-analysis'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   document.getElementById('nb-manage').classList.add('active');
   renderManage();
 }
+let analysisSeg = 'stats';
 function switchTab(t){
   curTab = t;
-  ['cal','list','stats','comp','cost'].forEach(k=>{
+  ['cal','list','analysis'].forEach(k=>{
     document.getElementById('tt-'+k)?.classList.toggle('active', k===t);
     const v = document.getElementById('v-'+k);
     if(v) v.style.display = k===t ? 'block' : 'none';
     const n = document.getElementById('nb-'+k);
     if(n) n.classList.toggle('active', k===t);
   });
-  if(t==='cal')   renderCalendar();
-  if(t==='list')  { renderFilterBar(); renderFullList(); }
-  if(t==='stats') renderStats();
-  if(t==='comp')  renderCompStats();
-  if(t==='cost')  renderCostStats();
+  if(t==='cal')      renderCalendar();
+  if(t==='list')     { renderFilterBar(); renderFullList(); }
+  if(t==='analysis') selAnalysisSeg(analysisSeg);
+}
+function selAnalysisSeg(seg){
+  analysisSeg = seg;
+  ['stats','comp','cost'].forEach(k=>{
+    document.getElementById('seg-'+k)?.classList.toggle('active', k===seg);
+    const v = document.getElementById('v-'+k);
+    if(v) v.style.display = k===seg ? 'block' : 'none';
+  });
+  if(seg==='stats') renderStats();
+  if(seg==='comp')  renderCompStats();
+  if(seg==='cost')  renderCostStats();
 }
 
 // ═══════════════════════════════════════
@@ -1707,58 +1689,6 @@ async function delCourse(i){
 }
 
 // ═══════════════════════════════════════
-// 관리화면 직접 입력
-// ═══════════════════════════════════════
-function selDiType(t){
-  diType=t;
-  ['confirmed','open','planned'].forEach(k=>{
-    document.getElementById('di-'+k).className='type-btn'+(k===t?' sel-'+k:'');
-  });
-}
-function handleDiComp(e){
-  if(e.key==='Enter'||e.key===','){
-    e.preventDefault();
-    const v=e.target.value.trim();
-    if(v&&!diComps.includes(v)){ diComps.push(v); renderDiComps(); }
-    else e.target.value='';
-  }
-}
-function renderDiComps(){
-  const wrap=document.getElementById('diCompWrap');
-  const tags=diComps.map((c,i)=>`<span class="tag">${c}<button class="tag-x" onclick="removeDiComp(${i})">×</button></span>`).join('');
-  const inp=`<input class="tag-input" id="diCompInput" placeholder="${diComps.length?'':'이름 입력 후 Enter'}" onkeydown="handleDiComp(event)">`;
-  wrap.innerHTML=tags+inp;
-}
-function removeDiComp(i){ diComps.splice(i,1); renderDiComps(); }
-async function saveDirect(){
-  const date=document.getElementById('di-date').value;
-  const name=document.getElementById('di-course').value.trim();
-  if(!date){ alert('날짜를 입력해주세요.'); return; }
-  if(!name){ alert('골프장명을 입력해주세요.'); return; }
-  if(!courses.includes(name)){ courses.push(name); }
-  const obj={
-    date, time:document.getElementById('di-time').value,
-    type:diType, courses:[name], courseName:document.getElementById('di-courseName').value.trim(),
-    companions:[...diComps],
-    green:0,cart:0,caddy:0,other:0,
-    memo:document.getElementById('di-memo').value.trim(), photos:[],
-  };
-  const docRef = await db.collection('users').doc(currentUser.uid).collection('schedules').add(obj);
-  schedules.push({...obj, id: docRef.id});
-  await saveData();
-  // 초기화
-  document.getElementById('di-date').value=toDateStr(today);
-  document.getElementById('di-course').value='';
-  document.getElementById('di-courseName').value='';
-  document.getElementById('di-time').value='';
-  document.getElementById('di-memo').value='';
-  diComps=[]; selDiType('confirmed'); renderDiComps(); renderManage();
-  renderAll();
-  alert(`✅ "${name}" 일정이 캘린더에 추가되었습니다!`);
-  // 등록된 사용자 동반자에게 일정 공유
-  await shareWithCompanions(obj,docRef.id);
-}
-
 // ═══════════════════════════════════════
 // 일정 추가/수정 폼
 // ═══════════════════════════════════════
@@ -1773,11 +1703,22 @@ function resetForm(){
   document.getElementById('f-memo').value='';
   document.getElementById('f-courseName').value='';
   document.getElementById('f-direct-course').value='';
-  document.getElementById('compInputBtn').value='';
   selType('confirmed');
   renderCompTags();
   renderCourseChips();
   renderPhotoArea();
+  setCostSec(false);
+}
+function setCostSec(open){
+  const sec=document.getElementById('costSec');
+  const tog=document.getElementById('costToggle');
+  if(!sec||!tog) return;
+  sec.style.display = open ? 'block' : 'none';
+  tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function toggleCostSec(){
+  const tog=document.getElementById('costToggle');
+  setCostSec(tog.getAttribute('aria-expanded')!=='true');
 }
 function openAdd(ds){
   editId=null;
@@ -1809,6 +1750,8 @@ function openEdit(id){
   renderCompTags();
   renderCourseChips();
   renderPhotoArea();
+  // 비용이 입력된 일정은 비용 섹션 자동 펼침
+  setCostSec(!!(s.green||s.cart||s.caddy||s.other));
   document.getElementById('formModal').style.display='flex';
 }
 async function saveSchedule(){
@@ -2019,13 +1962,6 @@ function handleComp(e){
   }
 }
 
-// 버튼으로 추가 (삼성 인터넷 Enter 안될 때 대안)
-function addCompByBtn(){
-  const inp=document.getElementById('compInputBtn');
-  if(addComp(inp.value)) inp.value='';
-  else if(!inp.value.trim()) alert('동반자 이름을 입력하세요.');
-}
-
 function removeComp(i){
   formComps.splice(i,1);
   renderCompTags();
@@ -2071,7 +2007,6 @@ function renderAll(){
 // 초기화
 // ═══════════════════════════════════════
 document.getElementById('f-date').value   = toDateStr(today);
-document.getElementById('di-date').value  = toDateStr(today);
 
 // Firebase onAuthStateChanged에서 초기화 자동 처리
 // 로딩 중 auth screen 표시
