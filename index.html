@@ -858,12 +858,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
       </button>
       <div id="costSec" class="cost-sec" style="display:none;">
         <div class="frow">
-          <div><div class="flabel">그린피 (원)</div><input class="finput" type="number" id="f-green" placeholder="0"></div>
-          <div><div class="flabel">카트비 (원)</div><input class="finput" type="number" id="f-cart" placeholder="0"></div>
+          <div><div class="flabel">그린피 (원)</div><input class="finput cost-input" type="text" inputmode="numeric" id="f-green" placeholder="0" oninput="fmtCostInput(this)"></div>
+          <div><div class="flabel">카트비 (원)</div><input class="finput cost-input" type="text" inputmode="numeric" id="f-cart" placeholder="0" oninput="fmtCostInput(this)"></div>
         </div>
         <div class="frow" style="margin-top:12px;">
-          <div><div class="flabel">캐디피 (원)</div><input class="finput" type="number" id="f-caddy" placeholder="0"></div>
-          <div><div class="flabel">식사/기타 (원)</div><input class="finput" type="number" id="f-other" placeholder="0"></div>
+          <div><div class="flabel">캐디피 (원)</div><input class="finput cost-input" type="text" inputmode="numeric" id="f-caddy" placeholder="0" oninput="fmtCostInput(this)"></div>
+          <div><div class="flabel">식사/기타 (원)</div><input class="finput cost-input" type="text" inputmode="numeric" id="f-other" placeholder="0" oninput="fmtCostInput(this)"></div>
         </div>
       </div>
 
@@ -1709,6 +1709,12 @@ function resetForm(){
   renderPhotoArea();
   setCostSec(false);
 }
+function parseCost(v){ return Number(String(v||'').replace(/[^\d]/g,''))||0; }
+function fmtCost(n){ const v=parseCost(n); return v?v.toLocaleString('ko-KR'):''; }
+function fmtCostInput(el){
+  const raw=String(el.value||'').replace(/[^\d]/g,'');
+  el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+}
 function setCostSec(open){
   const sec=document.getElementById('costSec');
   const tog=document.getElementById('costToggle');
@@ -1720,12 +1726,42 @@ function toggleCostSec(){
   const tog=document.getElementById('costToggle');
   setCostSec(tog.getAttribute('aria-expanded')!=='true');
 }
+function getLastCosts(courseName){
+  // 비용이 하나라도 입력된 일정 중 가장 최근(날짜 내림차순, 같으면 배열 끝 우선)
+  // courseName이 주어지면 해당 골프장이 포함된 일정만 대상으로
+  const pool=schedules
+    .map((s,i)=>({s,i}))
+    .filter(({s})=>{
+      if(!(s.green||s.cart||s.caddy||s.other)) return false;
+      if(courseName) return (s.courses||[]).includes(courseName);
+      return true;
+    });
+  if(!pool.length) return null;
+  pool.sort((a,b)=>{
+    if(a.s.date!==b.s.date) return a.s.date<b.s.date?1:-1;
+    return b.i-a.i;
+  });
+  return pool[0].s;
+}
+function applyLastCostsToForm(courseName){
+  // 일정 수정 중에는 자동 채움 안 함
+  if(editId) return;
+  // 우선순위: 골프장별 직전 비용 > 전체 직전 비용
+  const last = (courseName && getLastCosts(courseName)) || getLastCosts();
+  if(!last) return;
+  document.getElementById('f-green').value=fmtCost(last.green);
+  document.getElementById('f-cart').value =fmtCost(last.cart);
+  document.getElementById('f-caddy').value=fmtCost(last.caddy);
+  setCostSec(true);
+}
 function openAdd(ds){
   editId=null;
   document.getElementById('formTitle').innerHTML='<svg class="icon" aria-hidden="true" style="width:18px;height:18px;color:var(--g);"><use href="#i-flag"/></svg>일정 추가';
   resetForm();
   // 파라미터로 날짜가 넘어오면 그 날짜, 없으면 캘린더에서 선택된 날짜(selDate) 사용
   document.getElementById('f-date').value = ds || selDate || toDateStr(today);
+  // 직전 일정의 그린피/카트비/캐디피를 기본값으로 채움 (식사/기타는 변동성 커서 제외)
+  applyLastCostsToForm();
   document.getElementById('formModal').style.display='flex';
   setTimeout(()=>{ document.querySelector('#formModal .finput')?.blur(); },100);
 }
@@ -1739,10 +1775,10 @@ function openEdit(id){
   formPhotos=[...(s.photos||[])];
   document.getElementById('f-date').value=s.date;
   document.getElementById('f-time').value=s.time||'';
-  document.getElementById('f-green').value=s.green||'';
-  document.getElementById('f-cart').value=s.cart||'';
-  document.getElementById('f-caddy').value=s.caddy||'';
-  document.getElementById('f-other').value=s.other||'';
+  document.getElementById('f-green').value=fmtCost(s.green);
+  document.getElementById('f-cart').value=fmtCost(s.cart);
+  document.getElementById('f-caddy').value=fmtCost(s.caddy);
+  document.getElementById('f-other').value=fmtCost(s.other);
   document.getElementById('f-memo').value=s.memo||'';
   document.getElementById('f-courseName').value=s.courseName||'';
   document.getElementById('f-direct-course').value='';
@@ -1762,10 +1798,10 @@ async function saveSchedule(){
     date, time:document.getElementById('f-time').value,
     type:formType, courses:[...formCourses], courseName:document.getElementById('f-courseName').value.trim(),
     companions:[...formComps],
-    green:Number(document.getElementById('f-green').value)||0,
-    cart: Number(document.getElementById('f-cart').value)||0,
-    caddy:Number(document.getElementById('f-caddy').value)||0,
-    other:Number(document.getElementById('f-other').value)||0,
+    green:parseCost(document.getElementById('f-green').value),
+    cart: parseCost(document.getElementById('f-cart').value),
+    caddy:parseCost(document.getElementById('f-caddy').value),
+    other:parseCost(document.getElementById('f-other').value),
     memo:document.getElementById('f-memo').value.trim(),
     photos:[...formPhotos],
   };
@@ -1813,6 +1849,16 @@ function buildShareMessage(s){
   msg+=`📅 ${dateStr} (${dayOfWeek})${timeStr}\n`;
   msg+=`🏌️ ${courseStr}\n`;
   if(compList) msg+=`👥 ${compList}\n`;
+  if(s.green){
+    const green=Number(s.green)||0;
+    const ppl=(s.companions||[]).length+1;
+    if(green>=400000 && ppl>1){
+      const greenPP=Math.round(green/ppl);
+      msg+=`💰 그린피 ${greenPP.toLocaleString('ko-KR')}원 (1인, 총 ${green.toLocaleString('ko-KR')}원 ÷ ${ppl}명)\n`;
+    } else {
+      msg+=`💰 그린피 ${green.toLocaleString('ko-KR')}원\n`;
+    }
+  }
   if(s.memo) msg+=`📝 ${s.memo}\n`;
   msg+=`\n함께 라운드 하시겠습니까? 🏌️‍♂️`;
   return msg;
@@ -1913,8 +1959,11 @@ function renderCourseChips(){
       <span class="tag tag-direct" style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon" aria-hidden="true" style="width:11px;height:11px;"><use href="#i-flag"/></svg>${c}<button class="tag-x" style="color:#854d0e;" onclick="removeDirectCourse('${c}')">×</button></span>`).join('');
 }
 function toggleChip(c){
-  formCourses.includes(c) ? formCourses=formCourses.filter(x=>x!==c) : formCourses.push(c);
+  const wasOn=formCourses.includes(c);
+  wasOn ? formCourses=formCourses.filter(x=>x!==c) : formCourses.push(c);
   renderCourseChips();
+  // 새로 선택된 골프장이면 그 골프장 직전 비용으로 자동 채움
+  if(!wasOn) applyLastCostsToForm(c);
 }
 function addDirectCourse(){
   const inp=document.getElementById('f-direct-course');
@@ -1924,6 +1973,7 @@ function addDirectCourse(){
   formCourses.push(name);
   inp.value='';
   renderCourseChips();
+  applyLastCostsToForm(name);
 }
 function removeDirectCourse(name){
   formCourses=formCourses.filter(x=>x!==name);
