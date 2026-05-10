@@ -1245,54 +1245,76 @@ async function goAdmin(){
 }
 
 async function renderAdminPanel(){
-  // Firestore에서 전체 사용자 목록 가져오기
-  const snap = await db.collection('users').get();
-  allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const statsEl = document.getElementById('adminStats');
+  const listEl = document.getElementById('adminUserList');
+  // 로딩 표시
+  statsEl.innerHTML = '<div style="text-align:center;padding:16px;color:#888;">로딩 중...</div>';
+  listEl.innerHTML = '';
 
-  const totalUsers = allUsers.length;
-  const adminCount = allUsers.filter(u => u.role === 'admin').length;
+  try {
+    // Firestore에서 전체 사용자 목록 가져오기
+    const snap = await db.collection('users').get();
+    allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // 각 사용자의 일정 수 가져오기
-  let totalSchedules = 0;
-  const userScheduleCounts = {};
-  for(const u of allUsers){
-    const scheSnap = await db.collection('users').doc(u.id).collection('schedules').get();
-    userScheduleCounts[u.id] = scheSnap.size;
-    totalSchedules += scheSnap.size;
-  }
+    const totalUsers = allUsers.length;
+    const adminCount = allUsers.filter(u => u.role === 'admin').length;
 
-  document.getElementById('adminStats').innerHTML = [
-    { val: totalUsers, label: '전체 사용자' },
-    { val: adminCount, label: '관리자' },
-    { val: totalUsers - adminCount, label: '일반 사용자' },
-    { val: totalSchedules, label: '전체 일정' },
-  ].map(s => `<div class="admin-stat">
-    <div class="admin-stat-val">${s.val}</div>
-    <div class="admin-stat-label">${s.label}</div>
-  </div>`).join('');
+    // 각 사용자의 일정 수 가져오기
+    let totalSchedules = 0;
+    const userScheduleCounts = {};
+    for(const u of allUsers){
+      try {
+        const scheSnap = await db.collection('users').doc(u.id).collection('schedules').get();
+        userScheduleCounts[u.id] = scheSnap.size;
+        totalSchedules += scheSnap.size;
+      } catch(e){ userScheduleCounts[u.id] = 0; }
+    }
 
-  document.getElementById('adminUserList').innerHTML = allUsers.map((u) => {
-    const scheCount = userScheduleCounts[u.id] || 0;
-    const isSelf = u.id === currentUser.uid;
-    const badge = u.role === 'admin' ? '<span class="admin-badge">관리자</span>' : '';
-    const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole('${u.id}')">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
-    const resetBtn = `<button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw('${u.id}','${u.email}','${u.name}')">비밀번호 초기화</button>`;
-    const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser('${u.id}','${u.name}','${u.email}')">삭제</button>` : '';
-    return `<div class="admin-user-card">
-      <div class="admin-user-top">
-        <div class="admin-user-avatar">${u.name.charAt(0)}</div>
-        <div class="admin-user-info">
-          <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
-          <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 최근: ${u.lastLogin || '-'} · 일정 ${scheCount}건</div>
+    statsEl.innerHTML = [
+      { val: totalUsers, label: '전체 사용자' },
+      { val: adminCount, label: '관리자' },
+      { val: totalUsers - adminCount, label: '일반 사용자' },
+      { val: totalSchedules, label: '전체 일정' },
+    ].map(s => `<div class="admin-stat">
+      <div class="admin-stat-val">${s.val}</div>
+      <div class="admin-stat-label">${s.label}</div>
+    </div>`).join('');
+
+    listEl.innerHTML = allUsers.map((u) => {
+      const scheCount = userScheduleCounts[u.id] || 0;
+      const isSelf = u.id === currentUser.uid;
+      const badge = u.role === 'admin' ? '<span class="admin-badge">관리자</span>' : '';
+      const roleBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-role" onclick="toggleRole('${u.id}')">${u.role==='admin'?'일반으로':'관리자로'}</button>` : '';
+      const resetBtn = `<button class="admin-ubtn admin-ubtn-reset" onclick="adminResetPw('${u.id}','${u.email}','${u.name}')">비밀번호 초기화</button>`;
+      const delBtn = !isSelf ? `<button class="admin-ubtn admin-ubtn-del" onclick="adminDeleteUser('${u.id}','${u.name}','${u.email}')">삭제</button>` : '';
+      return `<div class="admin-user-card">
+        <div class="admin-user-top">
+          <div class="admin-user-avatar">${u.name.charAt(0)}</div>
+          <div class="admin-user-info">
+            <div class="admin-user-name">${u.name}${badge}${isSelf?' (나)':''}</div>
+            <div class="admin-user-detail">${u.email} · 가입: ${u.created || '-'} · 최근: ${u.lastLogin || '-'} · 일정 ${scheCount}건</div>
+          </div>
         </div>
-      </div>
-      <div class="admin-user-btns">
-        ${resetBtn}
-        ${roleBtn}
-        ${delBtn}
-      </div>
+        <div class="admin-user-btns">
+          ${resetBtn}
+          ${roleBtn}
+          ${delBtn}
+        </div>
+      </div>`;
+    }).join('');
+
+    if(!allUsers.length){
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#888;">등록된 사용자가 없습니다.</div>';
+    }
+  } catch(e){
+    console.error('관리자 패널 로딩 오류:', e);
+    statsEl.innerHTML = '';
+    listEl.innerHTML = `<div style="text-align:center;padding:24px;color:#c0392b;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:8px;">⚠️ 사용자 목록을 불러올 수 없습니다</div>
+      <div style="font-size:12px;color:#888;">${e.message || '권한이 부족하거나 네트워크 오류입니다.'}</div>
+      <button onclick="renderAdminPanel()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:13px;">다시 시도</button>
     </div>`;
-  }).join('');
+  }
 }
 
 async function adminResetPw(uid, email, name){
