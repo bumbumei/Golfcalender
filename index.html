@@ -1101,22 +1101,32 @@ async function doRegister(){
   if(!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return showAuthError('registerError','비밀번호는 영문과 숫자를 모두 포함해야 합니다.');
   if(pw !== pw2) return showAuthError('registerError','비밀번호가 일치하지 않습니다.');
 
+  let cred = null;
   try {
-    const cred = await auth.createUserWithEmailAndPassword(email, pw);
+    cred = await auth.createUserWithEmailAndPassword(email, pw);
+  } catch(e){
+    console.error('회원가입(Auth) 오류:', e);
+    return showAuthError('registerError', firebaseErrorMsg(e.code) + ` [${e.code||'unknown'}]`);
+  }
+
+  try {
     await cred.user.updateProfile({ displayName: name });
 
     // Firestore에 사용자 프로필 저장
-    // 특정 이메일(관리자)은 onAuthStateChanged에서 자동 승격됨
     const role = (email === 'bumbumei@gmail.com') ? 'admin' : 'user';
-
     await db.collection('users').doc(cred.user.uid).set({
       email, name, role,
       created: new Date().toISOString().slice(0,10)
     });
     // onAuthStateChanged에서 자동 로그인 처리됨
   } catch(e){
-    console.error('회원가입 오류:', e);
-    showAuthError('registerError', firebaseErrorMsg(e.code) + (e.message ? ` (${e.code || 'unknown'})` : ''));
+    console.error('회원가입(Firestore) 오류:', e);
+    // Firestore 저장 실패 시 Auth 계정도 삭제하여 재시도 가능하게 함
+    try { await cred.user.delete(); } catch(delErr){ console.error('Auth 정리 실패:', delErr); }
+    const msg = (e.code === 'permission-denied')
+      ? 'Firestore 권한 오류입니다. 관리자에게 문의해주세요. (보안 규칙 확인 필요)'
+      : (e.message || '프로필 저장 실패');
+    showAuthError('registerError', `프로필 저장 실패: ${msg} [${e.code||'firestore-error'}]`);
   }
 }
 
