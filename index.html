@@ -1106,9 +1106,8 @@ async function doRegister(){
     await cred.user.updateProfile({ displayName: name });
 
     // Firestore에 사용자 프로필 저장
-    // 첫 번째 사용자는 관리자
-    const usersSnap = await db.collection('users').get();
-    const role = usersSnap.empty ? 'admin' : 'user';
+    // 특정 이메일(관리자)은 onAuthStateChanged에서 자동 승격됨
+    const role = (email === 'bumbumei@gmail.com') ? 'admin' : 'user';
 
     await db.collection('users').doc(cred.user.uid).set({
       email, name, role,
@@ -1116,7 +1115,8 @@ async function doRegister(){
     });
     // onAuthStateChanged에서 자동 로그인 처리됨
   } catch(e){
-    showAuthError('registerError', firebaseErrorMsg(e.code));
+    console.error('회원가입 오류:', e);
+    showAuthError('registerError', firebaseErrorMsg(e.code) + (e.message ? ` (${e.code || 'unknown'})` : ''));
   }
 }
 
@@ -1179,9 +1179,8 @@ auth.onAuthStateChanged(async (user) => {
       await db.collection('users').doc(user.uid).update({ lastLogin: now });
       currentUserData.lastLogin = now;
     } else {
-      // Firestore에 프로필이 없으면 생성
-      const usersSnap = await db.collection('users').get();
-      const role = usersSnap.size <= 1 ? 'admin' : 'user';
+      // Firestore에 프로필이 없으면 생성 (특정 이메일은 관리자)
+      const role = (user.email === 'bumbumei@gmail.com') ? 'admin' : 'user';
       const profile = {
         email: user.email,
         name: user.displayName || user.email.split('@')[0],
