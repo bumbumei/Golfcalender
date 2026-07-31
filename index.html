@@ -940,38 +940,43 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
       </div>
 
       <div id="recurWrap">
-        <div class="flabel">반복</div>
-        <div class="frow">
-          <select class="finput" id="f-recur-freq" onchange="onRecurFreqChange()">
-            <option value="none">반복 안 함</option>
-            <option value="weekly">매주</option>
-            <option value="biweekly">2주마다</option>
-            <option value="monthly">매월</option>
-            <option value="yearly-nth">매년 (몇째주 요일)</option>
-          </select>
-          <div id="recurCountBox" style="display:none;">
-            <input class="finput" type="number" id="f-recur-count" min="2" max="52" value="4" inputmode="numeric" oninput="updateRecurHint()" style="text-align:center;" aria-label="반복 횟수">
+        <button type="button" class="fsec-toggle" id="recurToggle" onclick="toggleRecurSec()" aria-expanded="false" aria-controls="recurSec">
+          <span style="display:inline-flex;align-items:center;gap:6px;"><svg class="icon" aria-hidden="true" style="width:14px;height:14px;color:var(--g);"><use href="#i-repeat"/></svg>반복 설정 <span class="fsec-hint" id="recurSummary">(안 함)</span></span>
+          <svg class="icon fsec-chev" aria-hidden="true" style="width:16px;height:16px;color:var(--tm);"><use href="#i-chevron-down"/></svg>
+        </button>
+        <div id="recurSec" class="cost-sec" style="display:none;">
+          <div class="frow">
+            <select class="finput" id="f-recur-freq" onchange="onRecurFreqChange()">
+              <option value="none">반복 안 함</option>
+              <option value="weekly">매주</option>
+              <option value="biweekly">2주마다</option>
+              <option value="monthly">매월</option>
+              <option value="yearly-nth">매년 (몇째주 요일)</option>
+            </select>
+            <div id="recurCountBox" style="display:none;">
+              <input class="finput" type="number" id="f-recur-count" min="2" max="52" value="4" inputmode="numeric" oninput="updateRecurHint()" style="text-align:center;" aria-label="반복 횟수">
+            </div>
           </div>
+          <div id="recurNthBox" class="frow" style="display:none;margin-top:12px;">
+            <select class="finput" id="f-recur-week" onchange="updateRecurHint()" aria-label="주차">
+              <option value="1">첫째주</option>
+              <option value="2">둘째주</option>
+              <option value="3">셋째주</option>
+              <option value="4">넷째주</option>
+              <option value="0">마지막주</option>
+            </select>
+            <select class="finput" id="f-recur-weekday" onchange="updateRecurHint()" aria-label="요일">
+              <option value="0">일요일</option>
+              <option value="1">월요일</option>
+              <option value="2">화요일</option>
+              <option value="3">수요일</option>
+              <option value="4">목요일</option>
+              <option value="5">금요일</option>
+              <option value="6">토요일</option>
+            </select>
+          </div>
+          <div id="recurHint" style="display:none;font-size:12px;color:var(--tm);margin-top:8px;"></div>
         </div>
-        <div id="recurNthBox" class="frow" style="display:none;margin-top:12px;">
-          <select class="finput" id="f-recur-week" onchange="updateRecurHint()" aria-label="주차">
-            <option value="1">첫째주</option>
-            <option value="2">둘째주</option>
-            <option value="3">셋째주</option>
-            <option value="4">넷째주</option>
-            <option value="0">마지막주</option>
-          </select>
-          <select class="finput" id="f-recur-weekday" onchange="updateRecurHint()" aria-label="요일">
-            <option value="0">일요일</option>
-            <option value="1">월요일</option>
-            <option value="2">화요일</option>
-            <option value="3">수요일</option>
-            <option value="4">목요일</option>
-            <option value="5">금요일</option>
-            <option value="6">토요일</option>
-          </select>
-        </div>
-        <div id="recurHint" style="display:none;font-size:12px;color:var(--tm);margin-top:6px;"></div>
       </div>
 
       <div>
@@ -2066,14 +2071,31 @@ function onRecurFreqChange(){
   else nthBox.style.display='none';
   updateRecurHint();
 }
+function setRecurSec(open){
+  const sec=document.getElementById('recurSec');
+  const tog=document.getElementById('recurToggle');
+  if(!sec||!tog) return;
+  sec.style.display = open ? 'block' : 'none';
+  tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function toggleRecurSec(){
+  const tog=document.getElementById('recurToggle');
+  setRecurSec(tog.getAttribute('aria-expanded')!=='true');
+}
 function updateRecurHint(){
   const hint=document.getElementById('recurHint');
+  const summary=document.getElementById('recurSummary');
   const freq=document.getElementById('f-recur-freq').value;
   const date=document.getElementById('f-date').value;
-  if(freq==='none' || !date){ hint.style.display='none'; return; }
+  const shortMap={weekly:'매주',biweekly:'2주마다',monthly:'매월','yearly-nth':'매년'};
+  if(freq==='none' || !date){
+    hint.style.display='none';
+    if(summary) summary.textContent='(안 함)';
+    return;
+  }
   const p=getRecurParams();
   const dates=buildRecurDates(date, p);
-  if(!dates.length){ hint.style.display='none'; return; }
+  if(!dates.length){ hint.style.display='none'; if(summary) summary.textContent='(안 함)'; return; }
   const last=dates[dates.length-1];
   let label;
   if(freq==='yearly-nth'){
@@ -2084,6 +2106,7 @@ function updateRecurHint(){
   }
   hint.textContent=`${label} · ${dates.length}회 · ${fmtDate(dates[0])} ~ ${fmtDate(last)}`;
   hint.style.display='block';
+  if(summary) summary.textContent=`(${shortMap[freq]} · ${dates.length}회)`;
 }
 function resetRecur(){
   document.getElementById('f-recur-freq').value='none';
@@ -2093,6 +2116,8 @@ function resetRecur(){
   document.getElementById('recurCountBox').style.display='none';
   document.getElementById('recurNthBox').style.display='none';
   document.getElementById('recurHint').style.display='none';
+  document.getElementById('recurSummary').textContent='(안 함)';
+  setRecurSec(false);
 }
 function resetForm(){
   formType='confirmed'; formComps=[]; formCourses=[]; formPhotos=[];
